@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/app_config.dart';
 import '../core/config/app_config_provider.dart';
 import '../core/storage/local_store.dart';
+import '../firebase_options.dart';
 import '../theme/app_theme.dart';
 import 'router/app_router.dart';
 
@@ -12,6 +14,9 @@ import 'router/app_router.dart';
 /// [AppConfig.dev]; `main_prod.dart` passes [AppConfig.prod].
 Future<void> bootstrap(AppConfig config) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(

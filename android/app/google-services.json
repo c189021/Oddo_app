@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "884257635300",
+    "project_id": "oddo-emotion-diary",
+    "storage_bucket": "oddo-emotion-diary.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:884257635300:android:efb7af0bc91969e2ece5f1",
+        "android_client_info": {
+          "package_name": "app.oddo.oddo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzscm6TwLgfbKSHZt_2PqWvHlQ5pKymIY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
