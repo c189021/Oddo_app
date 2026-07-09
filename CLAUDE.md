@@ -205,6 +205,10 @@ flutter test            # 반드시 전부 통과 (스모크 + route_smoke_test)
 
 ## 12. 남은 작업 백로그 (Phase-2, 분업 대상)
 
+> **★ Phase-2의 확정된 기술 방향과 단계별 전체 계획은 루트의 `ROADMAP.md`를 보세요.**
+> (Firebase+FastAPI 하이브리드 / 외부 LLM API / 이메일 로그인 우선 / T2V·에셋·색상은 마지막)
+> 아래 목록은 그 계획의 요약 백로그입니다.
+
 **A. 데이터 연결 (실서비스 1순위)**
 - [ ] **날짜별 콘텐츠 연결** — 일기상세/감정리포트/상담기록이 현재 단일 샘플 더미. `viewingDate` 기준으로 날짜별 내용이 다르게 표시되도록.
 - [ ] **Repository ← DataSource ← Dummy 실연결** — 화면이 `*Dummy`/`DummySeed`를 직접 읽는 부분을 provider 경유로. (auth·diary는 스캐폴드만 있고 미사용 / `AppConfig.useDummyData` 스위치 존재)
