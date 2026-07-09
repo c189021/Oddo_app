@@ -35,11 +35,13 @@ class AppConfig {
     useDummyData: true,
   );
 
-  /// Production flavor — placeholder values until the backend exists.
+  /// Production flavor. The AI-server base URL is injected at build time so
+  /// no real endpoint is hardcoded in the repo:
+  /// `flutter run -t lib/main_prod.dart --dart-define=ODDO_API_BASE_URL=https://...`
   static const AppConfig prod = AppConfig(
     environment: AppEnvironment.prod,
     appName: 'Oddo',
-    apiBaseUrl: 'https://api.oddo.app',
+    apiBaseUrl: String.fromEnvironment('ODDO_API_BASE_URL'),
     useDummyData: false,
   );
 }
