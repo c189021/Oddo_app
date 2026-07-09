@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config/app_config.dart';
 import '../core/config/app_config_provider.dart';
+import '../core/storage/local_store.dart';
 import '../theme/app_theme.dart';
 import 'router/app_router.dart';
 
-/// Boots the app with the given [config] (the flavor seam). A `main_prod.dart`
-/// would call `bootstrap(AppConfig.prod)` instead.
-void bootstrap(AppConfig config) {
+/// Boots the app with the given [config] (the flavor seam). `main.dart` passes
+/// [AppConfig.dev]; `main_prod.dart` passes [AppConfig.prod].
+Future<void> bootstrap(AppConfig config) async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
-      overrides: [appConfigProvider.overrideWithValue(config)],
+      overrides: [
+        appConfigProvider.overrideWithValue(config),
+        localStoreProvider.overrideWithValue(LocalStore(prefs)),
+      ],
       child: const OddoApp(),
     ),
   );

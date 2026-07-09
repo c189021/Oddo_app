@@ -6,4 +6,5 @@ export 'constants/app_durations.dart';
 export 'error/app_exception.dart';
 export 'error/failure.dart';
 export 'network/api_client.dart';
+export 'storage/local_store.dart';
 export 'utils/date_formatter.dart';

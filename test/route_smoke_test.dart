@@ -5,7 +5,9 @@ import 'package:oddo/app/router/app_router.dart';
 import 'package:oddo/app/router/app_routes.dart';
 import 'package:oddo/core/config/app_config.dart';
 import 'package:oddo/core/config/app_config_provider.dart';
+import 'package:oddo/core/storage/local_store.dart';
 import 'package:oddo/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Every navigable route (the 50 numbered screens minus the 3 modals, plus the
 /// auxiliary screens). Modals (login error / baseline-needed / diary-start) are
@@ -79,8 +81,13 @@ void main() {
 
   for (final path in _routes) {
     testWidgets('route builds without error: $path', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [appConfigProvider.overrideWithValue(AppConfig.dev)],
+        overrides: [
+          appConfigProvider.overrideWithValue(AppConfig.dev),
+          localStoreProvider.overrideWithValue(LocalStore(prefs)),
+        ],
       );
       addTearDown(container.dispose);
 
