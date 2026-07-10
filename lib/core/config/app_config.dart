@@ -27,12 +27,14 @@ class AppConfig {
 
   bool get isDev => environment == AppEnvironment.dev;
 
-  /// Development flavor — dummy data, no real API.
+  /// Development flavor. Real Firebase auth/data since Phase 1; screens not
+  /// yet migrated to repositories still read the static dummies directly.
+  /// (Tests override this with `useDummyData: true` to stay off Firebase.)
   static const AppConfig dev = AppConfig(
     environment: AppEnvironment.dev,
     appName: 'Oddo (dev)',
     apiBaseUrl: '',
-    useDummyData: true,
+    useDummyData: false,
   );
 
   /// Production flavor. The AI-server base URL is injected at build time so

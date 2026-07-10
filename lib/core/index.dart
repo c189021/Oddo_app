@@ -8,3 +8,4 @@ export 'error/failure.dart';
 export 'network/api_client.dart';
 export 'storage/local_store.dart';
 export 'utils/date_formatter.dart';
+export 'utils/validators.dart';

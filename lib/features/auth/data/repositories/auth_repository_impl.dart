@@ -2,9 +2,9 @@ import '../datasources/auth_data_source.dart';
 import '../models/app_user.dart';
 import 'auth_repository.dart';
 
-/// Default repository — delegates to a [AuthDataSource]. This is the layer that
-/// would map low-level exceptions to domain [Failure]s and combine multiple
-/// data sources (e.g. remote + local token cache) when the backend exists.
+/// Default repository — delegates to a [AuthDataSource]. Data sources already
+/// normalize provider errors to `AuthException`/`NetworkException`, so this
+/// stays a thin pass-through until multiple sources need combining.
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._dataSource);
 
@@ -26,5 +26,16 @@ class AuthRepositoryImpl implements AuthRepository {
       _dataSource.signUp(email: email, password: password, nickname: nickname);
 
   @override
+  Future<void> sendPasswordReset({required String email}) =>
+      _dataSource.sendPasswordReset(email: email);
+
+  @override
+  Future<void> updateOnboardingDone({required bool done}) =>
+      _dataSource.updateOnboardingDone(done: done);
+
+  @override
   Future<void> logout() => _dataSource.logout();
+
+  @override
+  Future<void> deleteAccount() => _dataSource.deleteAccount();
 }

@@ -5,11 +5,17 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 
 /// "전체 동의" header + per-item consent rows (필수/선택 + 보기). Self-managed
-/// selection; toggling 전체 동의 flips every row. UI-only for the prototype.
+/// selection; toggling 전체 동의 flips every row. [onRequiredChanged] reports
+/// whether every 필수 item is checked, so the signup button can gate on it.
 class TermsAgreementSection extends StatefulWidget {
-  const TermsAgreementSection({super.key, this.terms = AuthDummy.terms});
+  const TermsAgreementSection({
+    super.key,
+    this.terms = AuthDummy.terms,
+    this.onRequiredChanged,
+  });
 
   final List<TermItem> terms;
+  final ValueChanged<bool>? onRequiredChanged;
 
   @override
   State<TermsAgreementSection> createState() => _TermsAgreementSectionState();
@@ -20,6 +26,13 @@ class _TermsAgreementSectionState extends State<TermsAgreementSection> {
 
   bool get _allChecked => _checked.every((c) => c);
 
+  bool get _requiredChecked => [
+        for (var i = 0; i < widget.terms.length; i++)
+          if (widget.terms[i].required) _checked[i],
+      ].every((c) => c);
+
+  void _notify() => widget.onRequiredChanged?.call(_requiredChecked);
+
   void _toggleAll() {
     final next = !_allChecked;
     setState(() {
@@ -27,9 +40,13 @@ class _TermsAgreementSectionState extends State<TermsAgreementSection> {
         _checked[i] = next;
       }
     });
+    _notify();
   }
 
-  void _toggleOne(int i) => setState(() => _checked[i] = !_checked[i]);
+  void _toggleOne(int i) {
+    setState(() => _checked[i] = !_checked[i]);
+    _notify();
+  }
 
   @override
   Widget build(BuildContext context) {

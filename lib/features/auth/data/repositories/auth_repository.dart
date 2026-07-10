@@ -13,5 +13,11 @@ abstract interface class AuthRepository {
     required String nickname,
   });
 
+  Future<void> sendPasswordReset({required String email});
+
+  Future<void> updateOnboardingDone({required bool done});
+
   Future<void> logout();
+
+  Future<void> deleteAccount();
 }

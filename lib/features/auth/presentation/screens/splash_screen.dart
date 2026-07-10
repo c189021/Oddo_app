@@ -1,10 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../features/auth/application/auth_controller.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
@@ -12,31 +12,31 @@ import '../../../../widgets/app_background.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/oddo_wordmark.dart';
 
-/// Screen 1 — 스플래시. Shows the brand, then auto-advances to login after a
-/// short delay. (Real app: check the saved login state here and route to
-/// login or home accordingly.)
-class SplashScreen extends StatefulWidget {
+/// Screen 1 — 스플래시. Shows the brand while restoring the saved session,
+/// then routes to home (auto-login) or the login screen.
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  Timer? _timer;
-
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(milliseconds: 1800), () {
-      if (mounted) context.goNamed(AppRoute.login);
-    });
+    _start();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _start() async {
+    // Restore the session while the brand moment plays (min splash time).
+    final results = await Future.wait<Object?>([
+      Future<void>.delayed(const Duration(milliseconds: 1500)),
+      ref.read(authControllerProvider.notifier).restoreSession(),
+    ]);
+    if (!mounted) return;
+    final loggedIn = results[1] != null;
+    context.goNamed(loggedIn ? AppRoute.home : AppRoute.login);
   }
 
   @override
