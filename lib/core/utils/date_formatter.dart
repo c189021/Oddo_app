@@ -22,6 +22,13 @@ abstract final class DateFormatter {
   static String fullKoreanDate(DateTime date) =>
       '${date.year}년 ${date.month}월 ${date.day}일 ${weekday(date)}요일';
 
+  /// `2004.03.15` (birth-date style)
+  static String dotted(DateTime date) {
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '${date.year}.$m.$d';
+  }
+
   /// `18:42`
   static String hhmm(DateTime date) {
     final h = date.hour.toString().padLeft(2, '0');

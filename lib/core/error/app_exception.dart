@@ -20,3 +20,13 @@ class ServerException extends AppException {
 class CacheException extends AppException {
   const CacheException([super.message = 'Cache error', super.cause]);
 }
+
+/// Auth failure with a user-facing (Korean) [message] — e.g. wrong password,
+/// email already in use — so screens can show it directly.
+class AuthException extends AppException {
+  const AuthException(String message, {this.code, Object? cause})
+      : super(message, cause);
+
+  /// Provider error code (e.g. FirebaseAuth's `wrong-password`), for logging.
+  final String? code;
+}

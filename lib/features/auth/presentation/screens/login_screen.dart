@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/error/app_exception.dart';
+import '../../../../core/storage/local_store.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../data/dummy/auth_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
@@ -14,25 +18,68 @@ import '../../../../widgets/oddo_text_field.dart';
 import '../../../../widgets/oddo_wordmark.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/security_note.dart';
+import '../../application/auth_controller.dart';
 import '../widgets/login_error_modal.dart';
 import '../widgets/or_divider.dart';
 import '../widgets/social_login_button.dart';
 
-/// Screen 2 — 로그인. Email/password + social login + links.
-/// (Prototype: navigates directly; the real flow would call
-/// `authControllerProvider.login(...)` then route on success/failure.)
-class LoginScreen extends StatefulWidget {
+/// Screen 2 — 로그인. Email/password sign-in against Firebase Auth; social
+/// login is deferred (buttons show a "준비 중" notice).
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  bool _keepLoggedIn = false;
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  late bool _keepLoggedIn =
+      ref.read(localStoreProvider).getBool(LocalStore.kKeepLoggedIn);
+  String? _emailError;
+  String? _passwordError;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    setState(() {
+      _emailError = Validators.email(email);
+      _passwordError = password.isEmpty ? '비밀번호를 입력해주세요.' : null;
+    });
+    if (_emailError != null || _passwordError != null) return;
+
+    try {
+      await ref.read(authControllerProvider.notifier).login(
+            email: email,
+            password: password,
+            keepLoggedIn: _keepLoggedIn,
+          );
+      if (mounted) context.goNamed(AppRoute.home);
+    } on AppException catch (e) {
+      if (mounted) await showLoginErrorModal(context, message: e.message);
+    }
+  }
+
+  void _socialNotReady() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('소셜 로그인은 준비 중이에요. 이메일로 로그인해주세요.')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading =
+        ref.watch(authControllerProvider.select((s) => s.isLoading));
+
     return Scaffold(
       body: AppBackground(
         child: SafeArea(
@@ -44,23 +91,28 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 _header(),
                 Gap.h24,
-                const OddoTextField(
+                OddoTextField(
+                  controller: _emailController,
                   hint: AuthDummy.emailHint,
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
+                  errorText: _emailError,
                 ),
                 Gap.h12,
-                const OddoTextField(
+                OddoTextField(
+                  controller: _passwordController,
                   hint: AuthDummy.passwordHint,
                   prefixIcon: Icons.lock_outline_rounded,
                   obscure: true,
+                  errorText: _passwordError,
                 ),
                 Gap.h12,
                 _optionsRow(),
                 Gap.h20,
                 PrimaryButton(
                   label: '로그인',
-                  onPressed: () => context.goNamed(AppRoute.home),
+                  loading: isLoading,
+                  onPressed: _submit,
                 ),
                 Gap.h20,
                 const OrDivider(),
@@ -68,13 +120,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 SocialLoginButton(
                   label: '카카오톡으로 계속하기',
                   leading: const _KakaoBadge(),
-                  onPressed: () => context.pushNamed(AppRoute.socialExtraInfo),
+                  onPressed: _socialNotReady,
                 ),
                 Gap.h12,
                 SocialLoginButton(
                   label: 'Google로 계속하기',
                   leading: const _GoogleBadge(),
-                  onPressed: () => context.pushNamed(AppRoute.socialExtraInfo),
+                  onPressed: _socialNotReady,
                 ),
                 Gap.h24,
                 _signupRow(),
@@ -82,17 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SecurityNote(
                   text: '로그인하면 서비스 이용약관 및 개인정보 처리방침에 동의하게 됩니다.',
                   center: true,
-                ),
-                Gap.h8,
-                TextButton(
-                  onPressed: () => showLoginErrorModal(context),
-                  child: Text(
-                    '(미리보기) 로그인 실패 모달',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textTertiary,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
                 ),
               ],
             ),

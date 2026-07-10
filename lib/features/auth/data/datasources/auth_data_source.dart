@@ -1,9 +1,12 @@
 import '../models/app_user.dart';
 
 /// Abstraction over where auth data comes from. A dummy implementation backs
-/// the prototype; a remote implementation (HTTP + token storage) replaces it
-/// later without changing the repository or UI.
+/// tests/prototyping; the Firebase implementation is the real one.
+///
+/// Implementations throw `AuthException` (user-facing Korean message) or
+/// `NetworkException` — never provider-specific exception types.
 abstract interface class AuthDataSource {
+  /// The saved session's user, or null when signed out.
   Future<AppUser?> currentUser();
 
   Future<AppUser> login({required String email, required String password});
@@ -14,5 +17,13 @@ abstract interface class AuthDataSource {
     required String nickname,
   });
 
+  Future<void> sendPasswordReset({required String email});
+
+  /// Persists onboarding completion on the user profile.
+  Future<void> updateOnboardingDone({required bool done});
+
   Future<void> logout();
+
+  /// Permanently deletes the account and its profile data.
+  Future<void> deleteAccount();
 }

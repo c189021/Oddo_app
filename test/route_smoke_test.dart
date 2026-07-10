@@ -66,6 +66,15 @@ const _routes = <String>[
   AppPath.notifications,
 ];
 
+/// Tests run on dummy data so they never touch Firebase (also keeps the
+/// route guard ungated, so every screen builds directly).
+const _testConfig = AppConfig(
+  environment: AppEnvironment.dev,
+  appName: 'Oddo (test)',
+  apiBaseUrl: '',
+  useDummyData: true,
+);
+
 void main() {
   // Use a realistic phone surface so layout matches the design.
   setUp(() {
@@ -85,7 +94,7 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
         overrides: [
-          appConfigProvider.overrideWithValue(AppConfig.dev),
+          appConfigProvider.overrideWithValue(_testConfig),
           localStoreProvider.overrideWithValue(LocalStore(prefs)),
         ],
       );
@@ -108,9 +117,10 @@ void main() {
       expect(tester.takeException(), isNull, reason: 'building $path threw');
       expect(find.byType(Scaffold), findsWidgets, reason: 'no Scaffold for $path');
 
-      // Unmount to cancel any auto-advance timers / animations before teardown.
+      // Unmount to cancel any auto-advance timers / animations before
+      // teardown, then flush non-cancelable delays (e.g. splash restore).
       await tester.pumpWidget(const SizedBox());
-      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
     });
   }
 }

@@ -1,0 +1,142 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../../../core/error/app_exception.dart';
+import '../models/app_user.dart';
+import 'auth_data_source.dart';
+
+/// Real auth: FirebaseAuth for credentials + the `users/{uid}` Firestore
+/// document for the profile (FIRESTORE_SCHEMA.md).
+///
+/// Every FirebaseAuthException is mapped to an [AuthException] with a
+/// user-facing Korean message, so screens can show it as-is.
+class AuthFirebaseDataSource implements AuthDataSource {
+  AuthFirebaseDataSource({FirebaseAuth? auth, FirebaseFirestore? firestore})
+      : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  DocumentReference<Map<String, dynamic>> _userDoc(String uid) =>
+      _firestore.collection('users').doc(uid);
+
+  @override
+  Future<AppUser?> currentUser() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    return _guard(() => _loadOrCreateProfile(user));
+  }
+
+  @override
+  Future<AppUser> login({
+    required String email,
+    required String password,
+  }) {
+    return _guard(() async {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return _loadOrCreateProfile(credential.user!);
+    });
+  }
+
+  @override
+  Future<AppUser> signUp({
+    required String email,
+    required String password,
+    required String nickname,
+  }) {
+    return _guard(() async {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = AppUser(
+        id: credential.user!.uid,
+        email: email,
+        nickname: nickname,
+        onboardingDone: false,
+        createdAt: DateTime.now(),
+      );
+      await _userDoc(user.id).set(user.toJson());
+      return user;
+    });
+  }
+
+  @override
+  Future<void> sendPasswordReset({required String email}) {
+    return _guard(() => _auth.sendPasswordResetEmail(email: email));
+  }
+
+  @override
+  Future<void> updateOnboardingDone({required bool done}) {
+    return _guard(() async {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) return;
+      await _userDoc(uid).update({'onboardingDone': done});
+    });
+  }
+
+  @override
+  Future<void> logout() => _guard(() => _auth.signOut());
+
+  @override
+  Future<void> deleteAccount() {
+    return _guard(() async {
+      final user = _auth.currentUser;
+      if (user == null) return;
+      await _userDoc(user.uid).delete();
+      await user.delete();
+    });
+  }
+
+  /// Reads the `users/{uid}` profile; creates it from the auth account when
+  /// missing (e.g. doc lost or created before the schema landed).
+  Future<AppUser> _loadOrCreateProfile(User firebaseUser) async {
+    final snapshot = await _userDoc(firebaseUser.uid).get();
+    final data = snapshot.data();
+    if (data != null) return AppUser.fromJson(data);
+
+    final fallback = AppUser(
+      id: firebaseUser.uid,
+      email: firebaseUser.email ?? '',
+      nickname: firebaseUser.displayName ?? '오또 사용자',
+      onboardingDone: false,
+      createdAt: DateTime.now(),
+    );
+    await _userDoc(fallback.id).set(fallback.toJson());
+    return fallback;
+  }
+
+  /// Maps Firebase exceptions to app-level ones with user-facing messages.
+  Future<T> _guard<T>(Future<T> Function() run) async {
+    try {
+      return await run();
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_messageFor(e.code), code: e.code, cause: e);
+    } on FirebaseException catch (e) {
+      if (e.code == 'unavailable') {
+        throw NetworkException('네트워크 연결이 불안정해요.', e);
+      }
+      throw AuthException('일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.',
+          code: e.code, cause: e);
+    }
+  }
+
+  static String _messageFor(String code) => switch (code) {
+        'invalid-email' => '이메일 형식이 올바르지 않아요.',
+        'user-not-found' ||
+        'wrong-password' ||
+        'invalid-credential' =>
+          '이메일 또는 비밀번호가 올바르지 않아요.',
+        'email-already-in-use' => '이미 가입된 이메일이에요.',
+        'weak-password' => '비밀번호는 6자 이상으로 만들어주세요.',
+        'user-disabled' => '사용이 중지된 계정이에요. 고객센터로 문의해주세요.',
+        'too-many-requests' => '시도가 너무 많았어요. 잠시 후 다시 시도해주세요.',
+        'network-request-failed' => '네트워크 연결이 불안정해요.',
+        'requires-recent-login' => '보안을 위해 다시 로그인한 뒤 시도해주세요.',
+        _ => '일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.',
+      };
+}

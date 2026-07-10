@@ -18,10 +18,14 @@ class OddoTextField extends StatefulWidget {
     this.suffix,
     this.readOnly = false,
     this.onTap,
+    this.errorText,
   });
 
   final String? hint;
   final IconData? prefixIcon;
+
+  /// Validation message shown under the field (null = no error).
+  final String? errorText;
 
   /// Password field: shows an eye toggle and hides input.
   final bool obscure;
@@ -69,6 +73,7 @@ class _OddoTextFieldState extends State<OddoTextField> {
       style: AppTypography.body.copyWith(color: AppColors.textStrong),
       decoration: InputDecoration(
         hintText: widget.hint,
+        errorText: widget.errorText,
         filled: true,
         fillColor: AppColors.surface,
         prefixIcon: widget.prefixIcon != null

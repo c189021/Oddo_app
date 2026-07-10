@@ -4,17 +4,14 @@ import '../models/app_user.dart';
 import 'auth_data_source.dart';
 
 /// In-memory auth backed by [DummySeed]. Simulates latency so loading states
-/// behave like the real thing.
+/// behave like the real thing. (Session check is instant, like the real one.)
 class AuthDummyDataSource implements AuthDataSource {
   AppUser? _current;
 
   Future<void> _delay() => Future<void>.delayed(AppDurations.dummyLatency);
 
   @override
-  Future<AppUser?> currentUser() async {
-    await _delay();
-    return _current;
-  }
+  Future<AppUser?> currentUser() async => _current;
 
   @override
   Future<AppUser> login({
@@ -42,7 +39,21 @@ class AuthDummyDataSource implements AuthDataSource {
   }
 
   @override
+  Future<void> sendPasswordReset({required String email}) => _delay();
+
+  @override
+  Future<void> updateOnboardingDone({required bool done}) async {
+    _current = _current?.copyWith(onboardingDone: done);
+  }
+
+  @override
   Future<void> logout() async {
+    await _delay();
+    _current = null;
+  }
+
+  @override
+  Future<void> deleteAccount() async {
     await _delay();
     _current = null;
   }

@@ -11,9 +11,9 @@ import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/primary_button.dart';
 
 /// Screen 5 — 로그인 실패 모달. Soft, reassuring error dialog over the login
-/// screen. (Skeleton: single generic message; per-case copy — 계정 없음 /
-/// 비밀번호 오류 / 네트워크 — can be passed in later.)
-Future<void> showLoginErrorModal(BuildContext context) {
+/// screen. [message] carries the per-case copy (계정 없음 / 비밀번호 오류 /
+/// 네트워크 — the AuthException message); omitted → generic copy.
+Future<void> showLoginErrorModal(BuildContext context, {String? message}) {
   return showDialog<void>(
     context: context,
     builder: (dialogContext) => Dialog(
@@ -40,8 +40,8 @@ Future<void> showLoginErrorModal(BuildContext context) {
             const Text('로그인 정보를 다시 확인해 주세요',
                 textAlign: TextAlign.center, style: AppTypography.subtitle),
             Gap.h8,
-            const Text(
-              '이메일 또는 비밀번호가 올바르지 않아요.\n다시 입력하거나 비밀번호를 재설정할 수 있어요.',
+            Text(
+              message ?? '이메일 또는 비밀번호가 올바르지 않아요.\n다시 입력하거나 비밀번호를 재설정할 수 있어요.',
               textAlign: TextAlign.center,
               style: AppTypography.bodySecondary,
             ),

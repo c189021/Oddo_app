@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/error/app_exception.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../data/dummy/auth_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
@@ -12,17 +15,52 @@ import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/oddo_text_field.dart';
 import '../../../../widgets/oddo_wordmark.dart';
 import '../../../../widgets/primary_button.dart';
+import '../../application/auth_controller.dart';
 import '../widgets/or_divider.dart';
 
-/// Screen 6 — 비밀번호 찾기. Enter email → send reset mail → back to login.
-class FindPasswordScreen extends StatelessWidget {
+/// Screen 6 — 비밀번호 찾기. Enter email → send a real reset mail → back to
+/// login. (Whether the email is registered is intentionally not revealed.)
+class FindPasswordScreen extends ConsumerStatefulWidget {
   const FindPasswordScreen({super.key});
 
-  void _sendAndReturn(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('메일을 보냈어요. 받은 편지함을 확인해주세요.')),
-    );
-    if (context.canPop()) context.pop();
+  @override
+  ConsumerState<FindPasswordScreen> createState() =>
+      _FindPasswordScreenState();
+}
+
+class _FindPasswordScreenState extends ConsumerState<FindPasswordScreen> {
+  final _emailController = TextEditingController();
+  String? _emailError;
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendAndReturn() async {
+    final email = _emailController.text.trim();
+    setState(() => _emailError = Validators.email(email));
+    if (_emailError != null) return;
+
+    setState(() => _sending = true);
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .sendPasswordReset(email: email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('메일을 보냈어요. 받은 편지함을 확인해주세요.')),
+      );
+      if (context.canPop()) context.pop();
+    } on AppException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   @override
@@ -66,16 +104,19 @@ class FindPasswordScreen extends StatelessWidget {
                       textAlign: TextAlign.left),
                 ),
                 Gap.h8,
-                const OddoTextField(
+                OddoTextField(
+                  controller: _emailController,
                   hint: AuthDummy.emailHint,
                   prefixIcon: Icons.mail_outline_rounded,
                   keyboardType: TextInputType.emailAddress,
+                  errorText: _emailError,
                 ),
                 Gap.h20,
                 PrimaryButton(
                   label: '재설정 메일 보내기',
                   trailingIcon: Icons.chevron_right_rounded,
-                  onPressed: () => _sendAndReturn(context),
+                  loading: _sending,
+                  onPressed: _sendAndReturn,
                 ),
                 Gap.h16,
                 const OrDivider(),
