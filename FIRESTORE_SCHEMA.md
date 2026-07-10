@@ -6,22 +6,16 @@
 > 대응하는 Dart 모델은 `features/<기능>/data/models/`에 있으며, 모든 모델은
 > `fromJson`/`toJson`을 가집니다 (Firestore 문서 ↔ 모델 변환은 이 두 메서드만 사용).
 
-## 0. 사전 준비 (Phase 2 담당, 1회)
+## 0. 사전 준비 — ✅ 완료됨 (2026-07-10)
 
-- Firebase 콘솔 → Firestore Database → **데이터베이스 만들기** → 리전 `asia-northeast3`(서울) → **프로덕션 모드**로 시작
-- 아래 보안 규칙 적용 (규칙 탭에 붙여넣기):
+> Firestore DB는 이미 생성·설정되어 있습니다. **Phase 2 담당은 콘솔 접근 없이 바로 코드 작업을
+> 시작하면 됩니다.**
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // 각 사용자는 자기 데이터만 읽고 쓸 수 있다.
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-  }
-}
-```
+- ✅ Firestore DB 생성 완료 — 리전 `asia-northeast3`(서울), 프로덕션 모드
+- ✅ 보안 규칙 배포 완료 — 규칙 원본은 레포의 **`firestore.rules`** (본인 데이터만 접근 가능)
+- 규칙을 수정할 일이 생기면: `firestore.rules` 편집 → PR 머지 후
+  `firebase deploy --only firestore:rules --project=oddo-emotion-diary`
+  (Firebase CLI 로그인 필요 — 팀장에게 요청)
 
 ## 1. 컬렉션 구조 한눈에
 
