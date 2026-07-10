@@ -1,4 +1,5 @@
 import '../models/app_user.dart';
+import '../models/social_login_result.dart';
 
 /// What the app needs from auth, independent of the data source. The UI/state
 /// layer depends only on this interface.
@@ -12,6 +13,10 @@ abstract interface class AuthRepository {
     required String password,
     required String nickname,
   });
+
+  Future<SocialLoginResult> loginWithGoogle();
+
+  Future<AppUser> completeSocialProfile({required String nickname});
 
   Future<void> sendPasswordReset({required String email});
 

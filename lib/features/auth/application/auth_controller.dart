@@ -5,6 +5,7 @@ import '../../../core/storage/local_store.dart';
 import '../../onboarding/application/onboarding_controller.dart';
 import '../data/auth_providers.dart';
 import '../data/models/app_user.dart';
+import '../data/models/social_login_result.dart';
 import '../data/repositories/auth_repository.dart';
 
 /// View-facing auth state. Screens watch this; they never touch repositories
@@ -83,6 +84,44 @@ class AuthController extends Notifier<AuthState> {
       final user = await _repo.signUp(
           email: email, password: password, nickname: nickname);
       // A fresh signup stays logged in on this device by default.
+      await ref
+          .read(localStoreProvider)
+          .setBool(LocalStore.kKeepLoggedIn, true);
+      _enterSession(user);
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  /// Google sign-in. `success` establishes the session; `needsProfile` means
+  /// the caller should route to the extra-info screen (screen 4) and finish
+  /// with [completeSocialProfile]; `cancelled` is a no-op.
+  Future<SocialLoginStatus> loginWithGoogle() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final result = await _repo.loginWithGoogle();
+      if (result.status == SocialLoginStatus.success) {
+        // Social sign-ins stay logged in on this device by default.
+        await ref
+            .read(localStoreProvider)
+            .setBool(LocalStore.kKeepLoggedIn, true);
+        _enterSession(result.user!);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      return result.status;
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  /// Finishes a first-time social login by creating the profile.
+  Future<void> completeSocialProfile({required String nickname}) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final user = await _repo.completeSocialProfile(nickname: nickname);
       await ref
           .read(localStoreProvider)
           .setBool(LocalStore.kKeepLoggedIn, true);
