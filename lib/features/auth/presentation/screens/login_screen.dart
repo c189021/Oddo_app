@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +21,7 @@ import '../../../../widgets/oddo_wordmark.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/security_note.dart';
 import '../../application/auth_controller.dart';
+import '../../data/models/social_login_result.dart';
 import '../widgets/login_error_modal.dart';
 import '../widgets/or_divider.dart';
 import '../widgets/social_login_button.dart';
@@ -69,9 +72,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _googleLogin() async {
+    try {
+      final status =
+          await ref.read(authControllerProvider.notifier).loginWithGoogle();
+      if (!mounted) return;
+      switch (status) {
+        case SocialLoginStatus.success:
+          context.goNamed(AppRoute.home);
+        case SocialLoginStatus.needsProfile:
+          unawaited(context.pushNamed(AppRoute.socialExtraInfo));
+        case SocialLoginStatus.cancelled:
+          break;
+      }
+    } on AppException catch (e) {
+      if (mounted) await showLoginErrorModal(context, message: e.message);
+    }
+  }
+
   void _socialNotReady() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('소셜 로그인은 준비 중이에요. 이메일로 로그인해주세요.')),
+      const SnackBar(content: Text('카카오 로그인은 준비 중이에요. 이메일 또는 Google로 로그인해주세요.')),
     );
   }
 
@@ -126,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 SocialLoginButton(
                   label: 'Google로 계속하기',
                   leading: const _GoogleBadge(),
-                  onPressed: _socialNotReady,
+                  onPressed: _googleLogin,
                 ),
                 Gap.h24,
                 _signupRow(),

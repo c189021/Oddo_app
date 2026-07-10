@@ -1,4 +1,5 @@
 import '../models/app_user.dart';
+import '../models/social_login_result.dart';
 
 /// Abstraction over where auth data comes from. A dummy implementation backs
 /// tests/prototyping; the Firebase implementation is the real one.
@@ -16,6 +17,13 @@ abstract interface class AuthDataSource {
     required String password,
     required String nickname,
   });
+
+  /// Google sign-in. `needsProfile` means the account is authenticated but has
+  /// no profile yet — follow with [completeSocialProfile].
+  Future<SocialLoginResult> loginWithGoogle();
+
+  /// Creates the `users/{uid}` profile for a first-time social user.
+  Future<AppUser> completeSocialProfile({required String nickname});
 
   Future<void> sendPasswordReset({required String email});
 

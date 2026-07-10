@@ -1,6 +1,7 @@
 import '../../../../core/constants/app_durations.dart';
 import '../../../../data/dummy/dummy_seed.dart';
 import '../models/app_user.dart';
+import '../models/social_login_result.dart';
 import 'auth_data_source.dart';
 
 /// In-memory auth backed by [DummySeed]. Simulates latency so loading states
@@ -35,6 +36,20 @@ class AuthDummyDataSource implements AuthDataSource {
       nickname: nickname,
       onboardingDone: false,
     );
+    return _current!;
+  }
+
+  @override
+  Future<SocialLoginResult> loginWithGoogle() async {
+    await _delay();
+    _current = DummySeed.user;
+    return SocialLoginResult(SocialLoginStatus.success, _current);
+  }
+
+  @override
+  Future<AppUser> completeSocialProfile({required String nickname}) async {
+    await _delay();
+    _current = DummySeed.user.copyWith(nickname: nickname, onboardingDone: false);
     return _current!;
   }
 

@@ -56,13 +56,14 @@ class DefaultFirebaseOptions {
     projectId: 'oddo-emotion-diary',
     storageBucket: 'oddo-emotion-diary.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyASrNTIjCy62gOZWXBEqpnkii5_utbtO9I',
     appId: '1:884257635300:ios:21c1b972535b70c1ece5f1',
     messagingSenderId: '884257635300',
     projectId: 'oddo-emotion-diary',
     storageBucket: 'oddo-emotion-diary.firebasestorage.app',
+    androidClientId: '884257635300-fbbfv2tvsg38br2qvt00otrc55km1k9c.apps.googleusercontent.com',
+    iosClientId: '884257635300-t0tmj7lrm8lcsf76ovcbjmdd06okgd3j.apps.googleusercontent.com',
     iosBundleId: 'app.oddo.oddo',
   );
 }

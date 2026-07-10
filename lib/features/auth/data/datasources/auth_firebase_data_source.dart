@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../core/error/app_exception.dart';
 import '../models/app_user.dart';
+import '../models/social_login_result.dart';
 import 'auth_data_source.dart';
 
 /// Real auth: FirebaseAuth for credentials + the `users/{uid}` Firestore
@@ -11,12 +14,17 @@ import 'auth_data_source.dart';
 /// Every FirebaseAuthException is mapped to an [AuthException] with a
 /// user-facing Korean message, so screens can show it as-is.
 class AuthFirebaseDataSource implements AuthDataSource {
-  AuthFirebaseDataSource({FirebaseAuth? auth, FirebaseFirestore? firestore})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  AuthFirebaseDataSource({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignIn? googleSignIn,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final GoogleSignIn _googleSignIn;
 
   DocumentReference<Map<String, dynamic>> _userDoc(String uid) =>
       _firestore.collection('users').doc(uid);
@@ -66,6 +74,49 @@ class AuthFirebaseDataSource implements AuthDataSource {
   }
 
   @override
+  Future<SocialLoginResult> loginWithGoogle() {
+    return _guard(() async {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        return const SocialLoginResult(SocialLoginStatus.cancelled);
+      }
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final userCredential = await _auth.signInWithCredential(credential);
+
+      final snapshot = await _userDoc(userCredential.user!.uid).get();
+      final data = snapshot.data();
+      if (data == null) {
+        // First-time social user — profile comes from the extra-info screen.
+        return const SocialLoginResult(SocialLoginStatus.needsProfile);
+      }
+      return SocialLoginResult(SocialLoginStatus.success, AppUser.fromJson(data));
+    });
+  }
+
+  @override
+  Future<AppUser> completeSocialProfile({required String nickname}) {
+    return _guard(() async {
+      final firebaseUser = _auth.currentUser;
+      if (firebaseUser == null) {
+        throw const AuthException('로그인 정보가 만료됐어요. 다시 로그인해주세요.');
+      }
+      final user = AppUser(
+        id: firebaseUser.uid,
+        email: firebaseUser.email ?? '',
+        nickname: nickname,
+        onboardingDone: false,
+        createdAt: DateTime.now(),
+      );
+      await _userDoc(user.id).set(user.toJson());
+      return user;
+    });
+  }
+
+  @override
   Future<void> sendPasswordReset({required String email}) {
     return _guard(() => _auth.sendPasswordResetEmail(email: email));
   }
@@ -80,7 +131,13 @@ class AuthFirebaseDataSource implements AuthDataSource {
   }
 
   @override
-  Future<void> logout() => _guard(() => _auth.signOut());
+  Future<void> logout() {
+    return _guard(() async {
+      // Also drop the Google session so the account picker shows next time.
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+    });
+  }
 
   @override
   Future<void> deleteAccount() {
@@ -110,7 +167,8 @@ class AuthFirebaseDataSource implements AuthDataSource {
     return fallback;
   }
 
-  /// Maps Firebase exceptions to app-level ones with user-facing messages.
+  /// Maps Firebase/plugin exceptions to app-level ones with user-facing
+  /// messages.
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
       return await run();
@@ -121,6 +179,10 @@ class AuthFirebaseDataSource implements AuthDataSource {
         throw NetworkException('네트워크 연결이 불안정해요.', e);
       }
       throw AuthException('일시적인 오류가 발생했어요. 잠시 후 다시 시도해주세요.',
+          code: e.code, cause: e);
+    } on PlatformException catch (e) {
+      // google_sign_in surfaces device/config errors this way.
+      throw AuthException('구글 로그인에 실패했어요. 잠시 후 다시 시도해주세요.',
           code: e.code, cause: e);
     }
   }

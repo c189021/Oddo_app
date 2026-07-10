@@ -1,5 +1,6 @@
 import '../datasources/auth_data_source.dart';
 import '../models/app_user.dart';
+import '../models/social_login_result.dart';
 import 'auth_repository.dart';
 
 /// Default repository — delegates to a [AuthDataSource]. Data sources already
@@ -24,6 +25,13 @@ class AuthRepositoryImpl implements AuthRepository {
     required String nickname,
   }) =>
       _dataSource.signUp(email: email, password: password, nickname: nickname);
+
+  @override
+  Future<SocialLoginResult> loginWithGoogle() => _dataSource.loginWithGoogle();
+
+  @override
+  Future<AppUser> completeSocialProfile({required String nickname}) =>
+      _dataSource.completeSocialProfile(nickname: nickname);
 
   @override
   Future<void> sendPasswordReset({required String email}) =>
