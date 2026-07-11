@@ -13,8 +13,16 @@
 			<array>
 				<!-- Google 로그인 콜백 (GoogleService-Info.plist의 REVERSED_CLIENT_ID) -->
 				<string>com.googleusercontent.apps.884257635300-t0tmj7lrm8lcsf76ovcbjmdd06okgd3j</string>
+				<!-- 카카오 로그인 콜백 (kakao{네이티브 앱 키}) -->
+				<string>kakao8b00254b04d1af4e710681a3184a48f9</string>
 			</array>
 		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<!-- 카카오톡 앱 설치 여부 확인/실행용 -->
+		<string>kakaokompassauth</string>
+		<string>kakaolink</string>
 	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>

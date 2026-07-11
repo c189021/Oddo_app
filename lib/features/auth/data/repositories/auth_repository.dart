@@ -16,6 +16,8 @@ abstract interface class AuthRepository {
 
   Future<SocialLoginResult> loginWithGoogle();
 
+  Future<SocialLoginResult> loginWithKakao();
+
   Future<AppUser> completeSocialProfile({required String nickname});
 
   Future<void> sendPasswordReset({required String email});

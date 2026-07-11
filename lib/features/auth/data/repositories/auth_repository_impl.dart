@@ -30,6 +30,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<SocialLoginResult> loginWithGoogle() => _dataSource.loginWithGoogle();
 
   @override
+  Future<SocialLoginResult> loginWithKakao() => _dataSource.loginWithKakao();
+
+  @override
   Future<AppUser> completeSocialProfile({required String nickname}) =>
       _dataSource.completeSocialProfile(nickname: nickname);
 

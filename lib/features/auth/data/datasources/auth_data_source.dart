@@ -22,6 +22,10 @@ abstract interface class AuthDataSource {
   /// no profile yet — follow with [completeSocialProfile].
   Future<SocialLoginResult> loginWithGoogle();
 
+  /// Kakao sign-in (KakaoTalk app jump, falls back to Kakao-account web
+  /// login). Same result semantics as [loginWithGoogle].
+  Future<SocialLoginResult> loginWithKakao();
+
   /// Creates the `users/{uid}` profile for a first-time social user.
   Future<AppUser> completeSocialProfile({required String nickname});
 

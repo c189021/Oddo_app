@@ -47,6 +47,13 @@ class AuthDummyDataSource implements AuthDataSource {
   }
 
   @override
+  Future<SocialLoginResult> loginWithKakao() async {
+    await _delay();
+    _current = DummySeed.user;
+    return SocialLoginResult(SocialLoginStatus.success, _current);
+  }
+
+  @override
   Future<AppUser> completeSocialProfile({required String nickname}) async {
     await _delay();
     _current = DummySeed.user.copyWith(nickname: nickname, onboardingDone: false);

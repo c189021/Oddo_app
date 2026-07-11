@@ -72,10 +72,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _googleLogin() async {
+  Future<void> _socialLogin(
+    Future<SocialLoginStatus> Function() attempt,
+  ) async {
     try {
-      final status =
-          await ref.read(authControllerProvider.notifier).loginWithGoogle();
+      final status = await attempt();
       if (!mounted) return;
       switch (status) {
         case SocialLoginStatus.success:
@@ -90,11 +91,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _socialNotReady() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('카카오 로그인은 준비 중이에요. 이메일 또는 Google로 로그인해주세요.')),
-    );
-  }
+  Future<void> _googleLogin() =>
+      _socialLogin(ref.read(authControllerProvider.notifier).loginWithGoogle);
+
+  Future<void> _kakaoLogin() =>
+      _socialLogin(ref.read(authControllerProvider.notifier).loginWithKakao);
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +142,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 SocialLoginButton(
                   label: '카카오톡으로 계속하기',
                   leading: const _KakaoBadge(),
-                  onPressed: _socialNotReady,
+                  onPressed: _kakaoLogin,
                 ),
                 Gap.h12,
                 SocialLoginButton(
