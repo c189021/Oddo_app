@@ -1,7 +1,12 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
 import '../../../../core/error/app_exception.dart';
 import '../models/app_user.dart';
@@ -98,6 +103,74 @@ class AuthFirebaseDataSource implements AuthDataSource {
   }
 
   @override
+  Future<SocialLoginResult> loginWithKakao() {
+    return _guard(() async {
+      // Firebase verifies the id_token's nonce claim against SHA256(rawNonce),
+      // so Kakao gets the hash and Firebase gets the raw value.
+      final rawNonce = _randomNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      kakao.OAuthToken token;
+      try {
+        if (await kakao.isKakaoTalkInstalled()) {
+          try {
+            token = await kakao.UserApi.instance
+                .loginWithKakaoTalk(nonce: hashedNonce);
+          } on PlatformException catch (e) {
+            if (e.code == 'CANCELED') {
+              return const SocialLoginResult(SocialLoginStatus.cancelled);
+            }
+            // 카카오톡은 있지만 실패(미로그인 등) → 계정(웹) 로그인으로 폴백.
+            token = await kakao.UserApi.instance
+                .loginWithKakaoAccount(nonce: hashedNonce);
+          }
+        } else {
+          token = await kakao.UserApi.instance
+              .loginWithKakaoAccount(nonce: hashedNonce);
+        }
+      } on kakao.KakaoClientException catch (e) {
+        if (e.reason == kakao.ClientErrorCause.cancelled) {
+          return const SocialLoginResult(SocialLoginStatus.cancelled);
+        }
+        throw AuthException('카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요.',
+            cause: e);
+      } on kakao.KakaoAuthException catch (e) {
+        if (e.error == kakao.AuthErrorCause.accessDenied) {
+          return const SocialLoginResult(SocialLoginStatus.cancelled);
+        }
+        throw AuthException('카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요.',
+            cause: e);
+      }
+
+      final idToken = token.idToken;
+      if (idToken == null) {
+        throw const AuthException(
+            '카카오 로그인 설정(OpenID Connect)이 아직 준비되지 않았어요.');
+      }
+      final credential = OAuthProvider('oidc.kakao').credential(
+        idToken: idToken,
+        rawNonce: rawNonce,
+      );
+      final userCredential = await _auth.signInWithCredential(credential);
+
+      final snapshot = await _userDoc(userCredential.user!.uid).get();
+      final data = snapshot.data();
+      if (data == null) {
+        return const SocialLoginResult(SocialLoginStatus.needsProfile);
+      }
+      return SocialLoginResult(SocialLoginStatus.success, AppUser.fromJson(data));
+    });
+  }
+
+  static String _randomNonce([int length = 32]) {
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random.secure();
+    return List.generate(length, (_) => chars[random.nextInt(chars.length)])
+        .join();
+  }
+
+  @override
   Future<AppUser> completeSocialProfile({required String nickname}) {
     return _guard(() async {
       final firebaseUser = _auth.currentUser;
@@ -133,8 +206,13 @@ class AuthFirebaseDataSource implements AuthDataSource {
   @override
   Future<void> logout() {
     return _guard(() async {
-      // Also drop the Google session so the account picker shows next time.
+      // Also drop the social sessions so account pickers show next time.
       await _googleSignIn.signOut();
+      try {
+        await kakao.UserApi.instance.logout();
+      } catch (_) {
+        // No Kakao session (email/Google user) — nothing to do.
+      }
       await _auth.signOut();
     });
   }

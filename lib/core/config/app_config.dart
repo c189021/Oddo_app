@@ -17,6 +17,10 @@ class AppConfig {
     required this.useDummyData,
   });
 
+  /// Kakao SDK native app key (public client identifier, same for all
+  /// flavors). Must match the scheme registered in AndroidManifest/Info.plist.
+  static const String kakaoNativeAppKey = '8b00254b04d1af4e710681a3184a48f9';
+
   final AppEnvironment environment;
   final String appName;
   final String apiBaseUrl;

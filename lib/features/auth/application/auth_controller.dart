@@ -97,10 +97,19 @@ class AuthController extends Notifier<AuthState> {
   /// Google sign-in. `success` establishes the session; `needsProfile` means
   /// the caller should route to the extra-info screen (screen 4) and finish
   /// with [completeSocialProfile]; `cancelled` is a no-op.
-  Future<SocialLoginStatus> loginWithGoogle() async {
+  Future<SocialLoginStatus> loginWithGoogle() =>
+      _socialLogin(_repo.loginWithGoogle);
+
+  /// Kakao sign-in — same semantics as [loginWithGoogle].
+  Future<SocialLoginStatus> loginWithKakao() =>
+      _socialLogin(_repo.loginWithKakao);
+
+  Future<SocialLoginStatus> _socialLogin(
+    Future<SocialLoginResult> Function() attempt,
+  ) async {
     state = state.copyWith(isLoading: true);
     try {
-      final result = await _repo.loginWithGoogle();
+      final result = await attempt();
       if (result.status == SocialLoginStatus.success) {
         // Social sign-ins stay logged in on this device by default.
         await ref

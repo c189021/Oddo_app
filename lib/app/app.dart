@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/config/app_config.dart';
@@ -17,6 +18,7 @@ Future<void> bootstrap(AppConfig config) async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await KakaoSdk.init(nativeAppKey: AppConfig.kakaoNativeAppKey);
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
