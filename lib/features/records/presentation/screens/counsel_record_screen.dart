@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:oddo/features/diary/data/models/counsel_session.dart';
 
 import '../../../../app/router/app_routes.dart';
-import '../../../../data/dummy/dummy_seed.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../data/dummy/records_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
@@ -12,17 +12,21 @@ import '../../../../theme/app_typography.dart';
 import '../../../../widgets/chat_bubble.dart';
 import '../../../../widgets/oddo_card.dart';
 import '../../../../widgets/primary_button.dart';
+import '../../../diary/data/diary_providers.dart';
 import '../../application/viewing_date_provider.dart';
+import '../widgets/record_async_view.dart';
 import '../widgets/record_top_bar.dart';
 
-/// Screen 50 — 상담 기록 (상담 tab of the written-day context).
+/// Screen 50 — 상담 기록 (상담 tab of the written-day context). Shows the
+/// viewed date's saved counsel log from Firestore.
 class CounselRecordScreen extends ConsumerWidget {
   const CounselRecordScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final date = ref.watch(viewingDateProvider);
-    final session = DummySeed.counselJan14;
+    final counselAsync = ref.watch(counselSessionProvider(date));
+
     return SafeArea(
       bottom: false,
       child: Column(
@@ -38,20 +42,24 @@ class CounselRecordScreen extends ConsumerWidget {
             ],
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
-                  AppSpacing.xs, AppSpacing.screenH, AppSpacing.md),
-              children: [
-                Text(RecordsDummy.counselTitle(date),
-                    style: AppTypography.subtitle),
-                Gap.h12,
-                const _SessionHeader(),
-                Gap.h16,
-                for (final msg in session.messages)
-                  ChatBubble(
-                      fromOddo: msg.speaker == CounselSpeaker.oddo,
-                      text: msg.text),
-              ],
+            child: RecordAsyncView(
+              value: counselAsync,
+              emptyMessage: '이 날짜에는 아직 상담 기록이 없어요',
+              builder: (session) => ListView(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
+                    AppSpacing.xs, AppSpacing.screenH, AppSpacing.md),
+                children: [
+                  Text(RecordsDummy.counselTitle(date),
+                      style: AppTypography.subtitle),
+                  Gap.h12,
+                  _SessionHeader(session: session),
+                  Gap.h16,
+                  for (final msg in session.messages)
+                    ChatBubble(
+                        fromOddo: msg.speaker == CounselSpeaker.oddo,
+                        text: msg.text),
+                ],
+              ),
             ),
           ),
           Padding(
@@ -71,7 +79,8 @@ class CounselRecordScreen extends ConsumerWidget {
 }
 
 class _SessionHeader extends StatelessWidget {
-  const _SessionHeader();
+  const _SessionHeader({required this.session});
+  final CounselSession session;
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +104,9 @@ class _SessionHeader extends StatelessWidget {
                 Text(RecordsDummy.counselSessionLabel,
                     style: AppTypography.body
                         .copyWith(fontWeight: FontWeight.w600)),
-                const Text(RecordsDummy.counselTime, style: AppTypography.caption),
+                Text(
+                    '${DateFormatter.hhmm(session.startedAt)} - ${DateFormatter.hhmm(session.endedAt)}',
+                    style: AppTypography.caption),
               ],
             ),
           ),

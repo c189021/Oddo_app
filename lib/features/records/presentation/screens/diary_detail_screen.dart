@@ -8,58 +8,69 @@ import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/mascot_image.dart';
+import '../../../diary/data/diary_providers.dart';
 import '../../application/viewing_date_provider.dart';
+import '../widgets/record_async_view.dart';
 import '../widgets/record_top_bar.dart';
 
-/// Screen 48 — 일기 상세 (일기 tab of the written-day context).
+/// Screen 48 — 일기 상세 (일기 tab of the written-day context). Shows the
+/// viewed date's saved diary from Firestore.
 class DiaryDetailScreen extends ConsumerWidget {
   const DiaryDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final date = ref.watch(viewingDateProvider);
+    final entryAsync = ref.watch(diaryEntryProvider(date));
+
     return SafeArea(
       bottom: false,
       child: Column(
         children: [
           const RecordTopBar(title: '일기 상세'),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
-                  AppSpacing.xs, AppSpacing.screenH, AppSpacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ClipRRect(
-                    borderRadius: AppRadius.card,
-                    child: AspectRatio(
-                      aspectRatio: 16 / 10,
-                      child: Container(
-                        color: AppColors.primarySoft,
-                        alignment: Alignment.center,
-                        // TODO: 노을 지는 창가에서 일기 쓰는 장면으로 교체 예정
-                        child: const MascotImage(
-                            pose: MascotPose.writing, size: 130),
+            child: RecordAsyncView(
+              value: entryAsync,
+              emptyMessage: '이 날짜에는 아직 일기가 없어요',
+              builder: (entry) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
+                    AppSpacing.xs, AppSpacing.screenH, AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ClipRRect(
+                      borderRadius: AppRadius.card,
+                      child: AspectRatio(
+                        aspectRatio: 16 / 10,
+                        child: Container(
+                          color: AppColors.primarySoft,
+                          alignment: Alignment.center,
+                          // TODO: 노을 지는 창가에서 일기 쓰는 장면으로 교체 예정
+                          child: const MascotImage(
+                              pose: MascotPose.writing, size: 130),
+                        ),
                       ),
                     ),
-                  ),
-                  Gap.h16,
-                  Row(
-                    children: [
-                      Text(RecordsDummy.diaryDateLabel(date),
-                          style: AppTypography.title
-                              .copyWith(color: AppColors.primary)),
-                      const Spacer(),
-                      const _MoodChip(RecordsDummy.diaryMood),
-                    ],
-                  ),
-                  Gap.h4,
-                  Text(RecordsDummy.diaryWrittenAt(date),
-                      style: AppTypography.caption),
-                  Gap.h16,
-                  Text(RecordsDummy.diaryBody,
-                      style: AppTypography.body.copyWith(height: 1.7)),
-                ],
+                    Gap.h16,
+                    Row(
+                      children: [
+                        Text(RecordsDummy.diaryDateLabel(date),
+                            style: AppTypography.title
+                                .copyWith(color: AppColors.primary)),
+                        const Spacer(),
+                        _MoodChip(entry.emotionKeywords.isNotEmpty
+                            ? entry.emotionKeywords.first
+                            : RecordsDummy.diaryMood),
+                      ],
+                    ),
+                    Gap.h4,
+                    Text(RecordsDummy.diaryWrittenAt(date),
+                        style: AppTypography.caption),
+                    Gap.h16,
+                    Text(entry.transcript,
+                        style: AppTypography.body.copyWith(height: 1.7)),
+                  ],
+                ),
               ),
             ),
           ),

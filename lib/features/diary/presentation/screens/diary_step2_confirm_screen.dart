@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
@@ -14,18 +15,20 @@ import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/oddo_card.dart';
 import '../../../../widgets/oddo_chip.dart';
 import '../../../../widgets/primary_button.dart';
+import '../../application/diary_draft_provider.dart';
 import '../widgets/diary_step_header.dart';
 
 /// Screen 39 — Step 2. 확인하기. Review/edit STT + summary + keywords + scores.
-class DiaryStep2ConfirmScreen extends StatefulWidget {
+class DiaryStep2ConfirmScreen extends ConsumerStatefulWidget {
   const DiaryStep2ConfirmScreen({super.key});
 
   @override
-  State<DiaryStep2ConfirmScreen> createState() =>
+  ConsumerState<DiaryStep2ConfirmScreen> createState() =>
       _DiaryStep2ConfirmScreenState();
 }
 
-class _DiaryStep2ConfirmScreenState extends State<DiaryStep2ConfirmScreen> {
+class _DiaryStep2ConfirmScreenState
+    extends ConsumerState<DiaryStep2ConfirmScreen> {
   late final TextEditingController _controller =
       TextEditingController(text: DummySeed.diaryJan14.transcript);
 
@@ -136,8 +139,13 @@ class _DiaryStep2ConfirmScreenState extends State<DiaryStep2ConfirmScreen> {
                       Gap.h8,
                       PrimaryButton(
                         label: '저장하고 다음 단계',
-                        onPressed: () =>
-                            context.pushNamed(AppRoute.diaryStep3VideoLoading),
+                        onPressed: () {
+                          // 수정한 원문을 완료 시 저장할 draft로 보관.
+                          ref
+                              .read(diaryDraftProvider.notifier)
+                              .setTranscript(_controller.text);
+                          context.pushNamed(AppRoute.diaryStep3VideoLoading);
+                        },
                       ),
                     ],
                   ),

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/error/app_exception.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../data/dummy/dummy_seed.dart';
 import '../../../../features/records/application/recorded_days_provider.dart';
 import '../../../../features/records/application/viewing_date_provider.dart';
@@ -16,6 +18,10 @@ import '../../../../widgets/card_section_header.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/oddo_card.dart';
 import '../../../../widgets/primary_button.dart';
+import '../../application/diary_draft_provider.dart';
+import '../../data/diary_providers.dart';
+import '../../data/models/counsel_session.dart';
+import '../../data/models/diary_entry.dart';
 import '../../data/models/emotion_report.dart';
 
 /// Screen 46 — 상담 후 감정 리포트·행동 가이드. Tabbed (감정 리포트 / 행동
@@ -29,6 +35,66 @@ class ReportGuideScreen extends ConsumerStatefulWidget {
 
 class _ReportGuideScreenState extends ConsumerState<ReportGuideScreen> {
   int _tab = 0;
+  bool _saving = false;
+
+  /// Saves the completed run (diary + report + counsel log) under the focused
+  /// date, then returns to the written-day home.
+  ///
+  /// TODO(Phase 5): 요약/키워드/점수/리포트/상담 로그를 실제 AI 산출물로 대체 —
+  /// 지금은 Step2에서 수정한 원문만 실데이터, 나머지는 샘플 콘텐츠.
+  Future<void> _completeRecord() async {
+    final writtenDate = ref.read(viewingDateProvider);
+    final transcript =
+        ref.read(diaryDraftProvider) ?? DummySeed.diaryJan14.transcript;
+    final sampleEntry = DummySeed.diaryJan14;
+    final sampleReport = DummySeed.reportJan14;
+    final now = DateTime.now();
+
+    final entry = DiaryEntry(
+      id: DateFormatter.dateKey(writtenDate),
+      date: writtenDate,
+      transcript: transcript,
+      summary: sampleEntry.summary,
+      emotionKeywords: sampleEntry.emotionKeywords,
+      emotionIntensity: sampleEntry.emotionIntensity,
+      emotionStability: sampleEntry.emotionStability,
+    );
+    final report = EmotionReport(
+      date: writtenDate,
+      emotionDistribution: sampleReport.emotionDistribution,
+      emotionIntensity: sampleReport.emotionIntensity,
+      recoveryPossibility: sampleReport.recoveryPossibility,
+      analysisComment: sampleReport.analysisComment,
+      behaviorGuides: sampleReport.behaviorGuides,
+      recommendedActivities: sampleReport.recommendedActivities,
+    );
+    final counsel = CounselSession(
+      date: writtenDate,
+      startedAt: now.subtract(const Duration(minutes: 30)),
+      endedAt: now,
+      messages: DummySeed.counselJan14.messages,
+    );
+
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(diaryRepositoryProvider)
+          .saveRecord(entry: entry, report: report, counsel: counsel);
+      ref.read(recordedDaysProvider.notifier).markRecorded(writtenDate);
+      ref.read(diaryDraftProvider.notifier).clear();
+      // 방금 저장한 날짜의 기록 화면들이 새 데이터를 읽도록 캐시 무효화.
+      ref.invalidate(diaryEntryProvider(writtenDate));
+      ref.invalidate(emotionReportProvider(writtenDate));
+      ref.invalidate(counselSessionProvider(writtenDate));
+      if (mounted) context.goNamed(AppRoute.homeWritten);
+    } on AppException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,15 +167,8 @@ class _ReportGuideScreenState extends ConsumerState<ReportGuideScreen> {
                     AppSpacing.xs, AppSpacing.screenH, AppSpacing.xs),
                 child: PrimaryButton(
                   label: '기록 완료하기',
-                  onPressed: () {
-                    // Mark the day we just wrote as recorded. It's already the
-                    // focused date, so the home + calendars now show it written.
-                    final writtenDate = ref.read(viewingDateProvider);
-                    ref
-                        .read(recordedDaysProvider.notifier)
-                        .markRecorded(writtenDate);
-                    context.goNamed(AppRoute.homeWritten);
-                  },
+                  loading: _saving,
+                  onPressed: _completeRecord,
                 ),
               ),
             ],
