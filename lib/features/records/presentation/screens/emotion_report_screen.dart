@@ -8,72 +8,86 @@ import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/card_section_header.dart';
 import '../../../../widgets/oddo_card.dart';
+import '../../../diary/data/diary_providers.dart';
+import '../../../diary/data/models/emotion_report.dart';
 import '../../application/viewing_date_provider.dart';
+import '../widgets/record_async_view.dart';
 import '../widgets/record_top_bar.dart';
 
-/// Screen 49 — 감정 리포트 (리포트 tab of the written-day context).
+/// Screen 49 — 감정 리포트 (리포트 tab of the written-day context). Shows the
+/// viewed date's saved report from Firestore.
+/// (지표 타일/추이 스파크라인은 아직 샘플 — Phase 5에서 실측값으로 교체.)
 class EmotionReportScreen extends ConsumerWidget {
   const EmotionReportScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final date = ref.watch(viewingDateProvider);
+    final reportAsync = ref.watch(emotionReportProvider(date));
+
     return SafeArea(
       bottom: false,
       child: Column(
         children: [
           const RecordTopBar(title: '감정 리포트'),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
-                  AppSpacing.xs, AppSpacing.screenH, AppSpacing.xl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(RecordsDummy.reportTitle(date), style: AppTypography.title),
-                  Gap.h4,
-                  Text(RecordsDummy.reportPeriod(date),
-                      style: AppTypography.caption),
-                  Gap.h16,
-                  const _SummaryCard(),
-                  Gap.h12,
-                  Row(
-                    children: [
-                      for (var i = 0;
-                          i < RecordsDummy.reportMetrics.length;
-                          i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        Expanded(
-                            child: _MetricTile(RecordsDummy.reportMetrics[i])),
-                      ],
-                    ],
-                  ),
-                  Gap.h12,
-                  const OddoCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            child: RecordAsyncView(
+              value: reportAsync,
+              emptyMessage: '이 날짜에는 아직 감정 리포트가 없어요',
+              builder: (report) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
+                    AppSpacing.xs, AppSpacing.screenH, AppSpacing.xl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(RecordsDummy.reportTitle(date),
+                        style: AppTypography.title),
+                    Gap.h4,
+                    Text(RecordsDummy.reportPeriod(date),
+                        style: AppTypography.caption),
+                    Gap.h16,
+                    _SummaryCard(report: report),
+                    Gap.h12,
+                    Row(
                       children: [
-                        CardSectionHeader(
-                            icon: Icons.auto_awesome_rounded, title: '분석 코멘트'),
-                        Gap.h8,
-                        Text(RecordsDummy.reportComment,
-                            style: AppTypography.body),
+                        for (var i = 0;
+                            i < RecordsDummy.reportMetrics.length;
+                            i++) ...[
+                          if (i > 0) const SizedBox(width: 8),
+                          Expanded(
+                              child:
+                                  _MetricTile(RecordsDummy.reportMetrics[i])),
+                        ],
                       ],
                     ),
-                  ),
-                  Gap.h12,
-                  const _ListCard(
-                    icon: Icons.spa_outlined,
-                    title: '추천 활동',
-                    items: RecordsDummy.reportActivities,
-                  ),
-                  Gap.h12,
-                  const _ListCard(
-                    icon: Icons.tips_and_updates_outlined,
-                    title: '맞춤 권고 사항',
-                    items: RecordsDummy.reportRecommendations,
-                  ),
-                ],
+                    Gap.h12,
+                    OddoCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const CardSectionHeader(
+                              icon: Icons.auto_awesome_rounded,
+                              title: '분석 코멘트'),
+                          Gap.h8,
+                          Text(report.analysisComment,
+                              style: AppTypography.body),
+                        ],
+                      ),
+                    ),
+                    Gap.h12,
+                    _ListCard(
+                      icon: Icons.spa_outlined,
+                      title: '추천 활동',
+                      items: report.recommendedActivities,
+                    ),
+                    Gap.h12,
+                    _ListCard(
+                      icon: Icons.tips_and_updates_outlined,
+                      title: '맞춤 권고 사항',
+                      items: report.behaviorGuides,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -84,10 +98,15 @@ class EmotionReportScreen extends ConsumerWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard();
+  const _SummaryCard({required this.report});
+  final EmotionReport report;
 
   @override
   Widget build(BuildContext context) {
+    // 대표 감정 = 분포에서 비중이 가장 큰 항목.
+    final top = report.emotionDistribution.entries
+        .reduce((a, b) => a.value >= b.value ? a : b);
+
     return OddoCard(
       child: Row(
         children: [
@@ -102,11 +121,12 @@ class _SummaryCard extends StatelessWidget {
                     size: 32, color: AppColors.primary),
               ),
               Gap.h8,
-              Text(RecordsDummy.reportRepEmotion,
+              Text(top.key,
                   style: AppTypography.bodySecondary
                       .copyWith(fontWeight: FontWeight.w700)),
-              Text('${RecordsDummy.reportRepPercent}%',
-                  style: AppTypography.title.copyWith(color: AppColors.primary)),
+              Text('${(top.value * 100).round()}%',
+                  style:
+                      AppTypography.title.copyWith(color: AppColors.primary)),
             ],
           ),
           const SizedBox(width: AppSpacing.lg),

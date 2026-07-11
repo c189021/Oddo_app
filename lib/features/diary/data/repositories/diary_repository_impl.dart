@@ -24,4 +24,16 @@ class DiaryRepositoryImpl implements DiaryRepository {
   @override
   Future<CounselSession?> fetchCounsel(DateTime date) =>
       _dataSource.fetchCounsel(date);
+
+  @override
+  Future<Set<DateTime>> fetchRecordedDates() =>
+      _dataSource.fetchRecordedDates();
+
+  @override
+  Future<void> saveRecord({
+    required DiaryEntry entry,
+    required EmotionReport report,
+    required CounselSession counsel,
+  }) =>
+      _dataSource.saveRecord(entry: entry, report: report, counsel: counsel);
 }

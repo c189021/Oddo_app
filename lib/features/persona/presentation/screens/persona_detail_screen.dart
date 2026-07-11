@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../core/error/app_exception.dart';
 import '../../../../data/dummy/persona_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
@@ -12,17 +14,21 @@ import '../../../../widgets/oddo_chip.dart';
 import '../../../../widgets/oddo_text_field.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/progress_dots.dart';
+import '../../data/models/persona_config.dart';
+import '../../data/persona_providers.dart';
 
-/// Screen 30 — 챗봇 페르소나 설정 상세 (말투 / 성격 / 이름). → 설정 완료.
-/// Selections are local UI state for the prototype.
-class PersonaDetailScreen extends StatefulWidget {
+/// Screen 30 — 챗봇 페르소나 설정 상세 (말투 / 성격 / 이름). 완료 시
+/// `users/{uid}/meta/persona`에 저장 → 설정 완료 화면.
+class PersonaDetailScreen extends ConsumerStatefulWidget {
   const PersonaDetailScreen({super.key});
 
   @override
-  State<PersonaDetailScreen> createState() => _PersonaDetailScreenState();
+  ConsumerState<PersonaDetailScreen> createState() =>
+      _PersonaDetailScreenState();
 }
 
-class _PersonaDetailScreenState extends State<PersonaDetailScreen> {
+class _PersonaDetailScreenState extends ConsumerState<PersonaDetailScreen> {
+  bool _saving = false;
   int _toneIndex = 0; // default: 친근하고 따뜻한
   late final Set<int> _traits = {
     for (var i = 0; i < PersonaDummy.traits.length; i++)
@@ -46,6 +52,36 @@ class _PersonaDetailScreenState extends State<PersonaDetailScreen> {
   void _toggleTrait(int i) => setState(() {
         _traits.contains(i) ? _traits.remove(i) : _traits.add(i);
       });
+
+  Future<void> _saveAndContinue() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('챗봇 이름을 입력해주세요.')));
+      return;
+    }
+    final config = PersonaConfig(
+      name: name,
+      tone: PersonaDummy.tones[_toneIndex].title,
+      traits: [
+        for (var i = 0; i < PersonaDummy.traits.length; i++)
+          if (_traits.contains(i)) PersonaDummy.traits[i],
+      ],
+      updatedAt: DateTime.now(),
+    );
+
+    setState(() => _saving = true);
+    try {
+      await ref.read(personaRepositoryProvider).savePersona(config);
+      if (mounted) await context.pushNamed(AppRoute.personaDone);
+    } on AppException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +164,8 @@ class _PersonaDetailScreenState extends State<PersonaDetailScreen> {
                     AppSpacing.xs, AppSpacing.screenH, AppSpacing.xs),
                 child: PrimaryButton(
                   label: '다음',
-                  onPressed: () => context.pushNamed(AppRoute.personaDone),
+                  loading: _saving,
+                  onPressed: _saveAndContinue,
                 ),
               ),
             ],

@@ -11,4 +11,12 @@ abstract interface class DiaryRepository {
   Future<EmotionReport?> fetchReport(DateTime date);
 
   Future<CounselSession?> fetchCounsel(DateTime date);
+
+  Future<Set<DateTime>> fetchRecordedDates();
+
+  Future<void> saveRecord({
+    required DiaryEntry entry,
+    required EmotionReport report,
+    required CounselSession counsel,
+  });
 }
