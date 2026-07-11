@@ -1,19 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/media/audio_recorder_service.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/video_call_widgets.dart';
+import '../../application/diary_draft_provider.dart';
 
-/// Screen 37 — Step 1. 실시간 말하기. Video-call style live recording. End call
-/// → Step 1 처리 중.
-class DiaryStep1LiveScreen extends StatelessWidget {
+/// Screen 37 — Step 1. 실시간 말하기. Video-call style live recording — the
+/// mic records for the whole call; ending the call stores the file path on
+/// the diary draft (Phase 4 uploads it for analysis). → Step 1 처리 중.
+class DiaryStep1LiveScreen extends ConsumerStatefulWidget {
   const DiaryStep1LiveScreen({super.key});
+
+  @override
+  ConsumerState<DiaryStep1LiveScreen> createState() =>
+      _DiaryStep1LiveScreenState();
+}
+
+class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(audioRecorderProvider).start(
+        fileName: 'diary_${DateFormatter.dateKey(DateTime.now())}_step1');
+  }
+
+  Future<void> _endCall() async {
+    final path = await ref.read(audioRecorderProvider).stop();
+    if (path != null) {
+      ref.read(diaryDraftProvider.notifier).setRecordingPath(path);
+    }
+    if (mounted) {
+      context.pushReplacementNamed(AppRoute.diaryStep1Processing);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +108,7 @@ class DiaryStep1LiveScreen extends StatelessWidget {
                             icon: Icons.call_end_rounded,
                             label: '통화 종료',
                             danger: true,
-                            onTap: () => context
-                                .pushReplacementNamed(AppRoute.diaryStep1Processing),
+                            onTap: _endCall,
                           ),
                           const SizedBox(width: 20),
                           const CallControlButton(

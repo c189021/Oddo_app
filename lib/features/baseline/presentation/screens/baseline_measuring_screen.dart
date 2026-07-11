@@ -1,36 +1,43 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/media/audio_recorder_service.dart';
 import '../../../../data/dummy/baseline_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../../widgets/camera_self_view.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/tip_card.dart';
+import '../../application/baseline_recording_provider.dart';
 import '../widgets/baseline_header.dart';
 
-/// Screen 19 — 얼굴·음성 Baseline 측정 중. Video-call style. Auto-advances to
-/// the analysis screen after a dummy delay (tap the status bar to skip).
-class BaselineMeasuringScreen extends StatefulWidget {
+/// Screen 19 — 얼굴·음성 Baseline 측정 중. Video-call style: live front camera
+/// + mic recording (path kept for the Phase-4 analysis upload). Auto-advances
+/// to the analysis screen after a dummy delay (tap the status bar to skip).
+class BaselineMeasuringScreen extends ConsumerStatefulWidget {
   const BaselineMeasuringScreen({super.key});
 
   @override
-  State<BaselineMeasuringScreen> createState() =>
+  ConsumerState<BaselineMeasuringScreen> createState() =>
       _BaselineMeasuringScreenState();
 }
 
-class _BaselineMeasuringScreenState extends State<BaselineMeasuringScreen> {
+class _BaselineMeasuringScreenState
+    extends ConsumerState<BaselineMeasuringScreen> {
   Timer? _timer;
   bool _advanced = false;
 
   @override
   void initState() {
     super.initState();
+    ref.read(audioRecorderProvider).start(fileName: 'baseline_voice');
     _timer = Timer(const Duration(seconds: 4), _advance);
   }
 
@@ -40,10 +47,14 @@ class _BaselineMeasuringScreenState extends State<BaselineMeasuringScreen> {
     super.dispose();
   }
 
-  void _advance() {
+  Future<void> _advance() async {
     if (_advanced || !mounted) return;
     _advanced = true;
-    context.pushReplacementNamed(AppRoute.baselineAnalyzing);
+    final path = await ref.read(audioRecorderProvider).stop();
+    if (path != null) {
+      ref.read(baselineRecordingProvider.notifier).set(path);
+    }
+    if (mounted) context.pushReplacementNamed(AppRoute.baselineAnalyzing);
   }
 
   @override
@@ -121,11 +132,18 @@ class _PreviewCard extends StatelessWidget {
         color: AppColors.callSurface,
         borderRadius: AppRadius.card,
       ),
+      clipBehavior: Clip.antiAlias,
       child: const Stack(
+        fit: StackFit.expand,
         children: [
-          // TODO: 손 흔드는 측정용 정면 포즈로 교체 예정 (character_sheet 10.인사)
-          Center(
-              child: MascotImage(pose: MascotPose.waving, size: 150, onDark: true)),
+          // 측정 대상인 사용자 본인 얼굴 — 전면 카메라 라이브 뷰.
+          // (카메라 불가 시 마스코트 플레이스홀더로 폴백)
+          CameraSelfView(
+            fallback: Center(
+                // TODO: 손 흔드는 측정용 정면 포즈로 교체 예정 (character_sheet 10.인사)
+                child:
+                    MascotImage(pose: MascotPose.waving, size: 150, onDark: true)),
+          ),
           Positioned(top: 12, left: 12, child: _LiveChip()),
           Positioned(top: 12, right: 12, child: _TimerChip(time: '00:28')),
           Positioned(bottom: 14, right: 14, child: _Waveform()),

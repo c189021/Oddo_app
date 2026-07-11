@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/permissions/app_permissions.dart';
 import '../../../../data/dummy/baseline_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
@@ -14,10 +17,63 @@ import '../../../../widgets/oddo_card.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/security_note.dart';
 
-/// Screen 9 — 권한 요청 안내. Explains why each OS permission is needed before
-/// the system prompts. → 권한 허용하기 → 튜토리얼 1/5.
-class PermissionScreen extends StatelessWidget {
+/// Screen 9 — 권한 요청 안내. Explains why each OS permission is needed, then
+/// fires the real camera/mic prompts. → 튜토리얼 1/5.
+class PermissionScreen extends StatefulWidget {
   const PermissionScreen({super.key});
+
+  @override
+  State<PermissionScreen> createState() => _PermissionScreenState();
+}
+
+class _PermissionScreenState extends State<PermissionScreen> {
+  bool _requesting = false;
+
+  Future<void> _requestAndContinue() async {
+    setState(() => _requesting = true);
+    final granted = await AppPermissions.requestCameraAndMic();
+    if (!mounted) return;
+    setState(() => _requesting = false);
+
+    if (granted) {
+      unawaited(context.pushNamed(AppRoute.tutorialIntro));
+      return;
+    }
+
+    // Denied: explain what breaks and let them fix it in Settings or move on
+    // (the call screens degrade to placeholders without the permissions).
+    final permanentlyDenied = await AppPermissions.isPermanentlyDenied();
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('권한이 아직 허용되지 않았어요', style: AppTypography.subtitle),
+        content: const Text(
+          '카메라와 마이크가 없으면 표정·음성 감정 분석을 사용할 수 없어요.\n'
+          '지금은 건너뛰고 나중에 설정에서 허용할 수도 있어요.',
+          style: AppTypography.bodySecondary,
+        ),
+        actions: [
+          if (permanentlyDenied)
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                AppPermissions.openSettings();
+              },
+              child: const Text('설정 열기'),
+            ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              context.pushNamed(AppRoute.tutorialIntro);
+            },
+            child: const Text('건너뛰고 계속'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +126,8 @@ class PermissionScreen extends StatelessWidget {
                     AppSpacing.screenH, AppSpacing.xs, AppSpacing.screenH, AppSpacing.xs),
                 child: PrimaryButton(
                   label: '권한 허용하기',
-                  onPressed: () => context.pushNamed(AppRoute.tutorialIntro),
+                  loading: _requesting,
+                  onPressed: _requestAndContinue,
                 ),
               ),
             ],

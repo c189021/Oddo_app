@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
+import 'camera_self_view.dart';
 
 /// Shared chrome for the dark video-call screens (tutorial call practice,
 /// baseline measuring, Step 1 live speaking, Step 4 counseling). Extracted so
@@ -73,7 +74,8 @@ class CallChip extends StatelessWidget {
   }
 }
 
-/// Small user-camera preview placeholder (bottom-left of the call view).
+/// Small user-camera self view (bottom-left of the call view). Shows the live
+/// front camera; falls back to the person-icon placeholder without one.
 class CallUserPreview extends StatelessWidget {
   const CallUserPreview({super.key, this.width = 84, this.height = 112});
 
@@ -89,8 +91,8 @@ class CallUserPreview extends StatelessWidget {
         color: AppColors.callSurface,
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
-      child: const Icon(Icons.person_rounded,
-          size: 34, color: AppColors.callTextSecondary),
+      clipBehavior: Clip.antiAlias,
+      child: const CameraSelfView(),
     );
   }
 }
