@@ -73,9 +73,10 @@ class TutorialCallScreen extends StatelessWidget {
                           size: 18, color: AppColors.callTextSecondary),
                     ),
                   ),
+                  // 우상단(카메라 전환 버튼 아래) — 하단 버튼과 겹치지 않게.
                   const Positioned(
-                      left: AppSpacing.screenH,
-                      bottom: 12,
+                      top: 56,
+                      right: AppSpacing.screenH,
                       child: CallUserPreview()),
                   const Positioned(
                     right: 0,

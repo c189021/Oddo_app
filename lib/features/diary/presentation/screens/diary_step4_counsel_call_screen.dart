@@ -65,9 +65,10 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
                     child: CallChip(
                         icon: Icons.show_chart_rounded, label: '감정 변화 측정 중'),
                   ),
+                  // 우상단(감정 변화 측정 칩 아래) — 자막 말풍선과 겹치지 않게.
                   const Positioned(
-                      left: AppSpacing.screenH,
-                      bottom: 96,
+                      top: 48,
+                      right: AppSpacing.screenH,
                       child: CallUserPreview(width: 80, height: 106)),
                   const Positioned(
                     left: AppSpacing.screenH,

@@ -89,9 +89,10 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
                   ),
                   const Positioned(
                       top: 8, right: AppSpacing.screenH, child: _AnalysisChip()),
+                  // 우상단(실시간 감정 분석 칩 아래) — 하단 버튼과 겹치지 않게.
                   const Positioned(
-                      left: AppSpacing.screenH,
-                      bottom: 16,
+                      top: 76,
+                      right: AppSpacing.screenH,
                       child: CallUserPreview()),
                   Positioned(
                     right: 0,
