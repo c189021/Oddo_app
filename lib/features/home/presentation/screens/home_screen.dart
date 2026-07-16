@@ -59,11 +59,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final selected = ref.watch(viewingDateProvider);
     final onboarded = ref.watch(onboardingCompleteProvider);
     final recorded = ref.watch(recordedDaysProvider);
-    final written = recorded
-        .contains(DateTime(selected.year, selected.month, selected.day));
+    final written = recorded.contains(
+      DateTime(selected.year, selected.month, selected.day),
+    );
     // 7-day strip centered on the selected date (selected in the middle).
-    final weekDays =
-        List.generate(7, (i) => selected.add(Duration(days: i - 3)));
+    final weekDays = List.generate(
+      7,
+      (i) => selected.add(Duration(days: i - 3)),
+    );
 
     return Scaffold(
       bottomNavigationBar: written
@@ -82,13 +85,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.screenH, AppSpacing.xs, AppSpacing.screenH, 0),
+                  AppSpacing.screenH,
+                  AppSpacing.xs,
+                  AppSpacing.screenH,
+                  0,
+                ),
                 child: HomeHeader(month: selected),
               ),
               Gap.h12,
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppSpacing.screenH),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.screenH,
+                ),
                 child: WeeklyCalendar(
                   days: weekDays,
                   today: HomeDummy.today,
@@ -102,7 +110,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Center(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenH),
+                      horizontal: AppSpacing.screenH,
+                    ),
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -112,23 +121,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           left: 0,
                           right: 0,
                           child: Center(
-                            child:
-                                MascotImage(pose: MascotPose.front, size: 150),
+                            child: MascotImage(
+                              pose: MascotPose.front,
+                              size: 150,
+                            ),
                           ),
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 96),
-                          child: written
-                              ? _WrittenCard(
-                                  date: selected,
-                                  onReadDiary: () =>
-                                      context.goNamed(AppRoute.recordsDiary),
-                                )
-                              : _WriteCard(
-                                  date: selected,
-                                  onWrite: () =>
-                                      _onWritePressed(onboarded, selected),
-                                ),
+                          child: _HomeCard(
+                            date: selected,
+                            written: written,
+                            onReadDiary: () =>
+                                context.goNamed(AppRoute.recordsDiary),
+                            onWrite: () => _onWritePressed(onboarded, selected),
+                          ),
                         ),
                       ],
                     ),
@@ -143,110 +150,168 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-/// Not-written state — prompt to start a diary for [date].
-class _WriteCard extends StatelessWidget {
-  const _WriteCard({required this.date, required this.onWrite});
+/// The home's single main card. Both states render inside one shell via
+/// [IndexedStack], which sizes itself to the larger child (the written
+/// layout) — so the card's size and position never change when the selected
+/// date flips between written/unwritten; only the content swaps.
+class _HomeCard extends StatelessWidget {
+  const _HomeCard({
+    required this.date,
+    required this.written,
+    required this.onReadDiary,
+    required this.onWrite,
+  });
 
   final DateTime date;
+  final bool written;
+  final VoidCallback onReadDiary;
   final VoidCallback onWrite;
 
   @override
   Widget build(BuildContext context) {
     return _HomeCardShell(
-      child: Column(
+      child: IndexedStack(
+        index: written ? 0 : 1,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-                color: AppColors.backgroundAlt, shape: BoxShape.circle),
-            child: const Icon(Icons.edit_note_rounded,
-                color: AppColors.textTertiary),
+          _WrittenContent(date: date, onReadDiary: onReadDiary),
+          // 짧은 미작성 내용은 고정된 카드 안에서 세로 중앙 정렬.
+          Center(
+            child: _WriteContent(date: date, onWrite: onWrite),
           ),
-          Gap.h12,
-          Text(DateFormatter.monthDay(date),
-              style: AppTypography.bodySecondary),
-          Gap.h4,
-          const Text(HomeDummy.writeCardTitle, style: AppTypography.title),
-          Gap.h8,
-          const Text(HomeDummy.writeCardSubtitle,
-              textAlign: TextAlign.center, style: AppTypography.bodySecondary),
-          Gap.h20,
-          PrimaryButton(label: '일기 작성하기', onPressed: onWrite),
         ],
       ),
     );
   }
 }
 
-/// Written state — recorded-day card with the generated video + read button.
-class _WrittenCard extends StatelessWidget {
-  const _WrittenCard({required this.date, required this.onReadDiary});
+/// Not-written state — prompt to start a diary for [date].
+class _WriteContent extends StatelessWidget {
+  const _WriteContent({required this.date, required this.onWrite});
+
+  final DateTime date;
+  final VoidCallback onWrite;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundAlt,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.edit_note_rounded,
+            color: AppColors.textTertiary,
+          ),
+        ),
+        Gap.h12,
+        Text(DateFormatter.monthDay(date), style: AppTypography.bodySecondary),
+        Gap.h4,
+        const Text(HomeDummy.writeCardTitle, style: AppTypography.title),
+        Gap.h8,
+        const Text(
+          HomeDummy.writeCardSubtitle,
+          textAlign: TextAlign.center,
+          style: AppTypography.bodySecondary,
+        ),
+        Gap.h20,
+        PrimaryButton(label: '일기 작성하기', onPressed: onWrite),
+      ],
+    );
+  }
+}
+
+/// Written state — recorded-day card content with the generated video +
+/// read button.
+class _WrittenContent extends StatelessWidget {
+  const _WrittenContent({required this.date, required this.onReadDiary});
 
   final DateTime date;
   final VoidCallback onReadDiary;
 
   @override
   Widget build(BuildContext context) {
-    return _HomeCardShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(DateFormatter.monthDay(date),
-              style: AppTypography.title.copyWith(color: AppColors.primary)),
-          Gap.h4,
-          const Text(RecordsDummy.homeWrittenTitle,
-              style: AppTypography.bodySecondary),
-          Gap.h16,
-          GestureDetector(
-            onTap: () => context.pushNamed(AppRoute.shortformPlayer),
-            child: ClipRRect(
-              borderRadius: AppRadius.card,
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Container(color: AppColors.callBackground),
-                    // TODO: 일기 쓰는 장면 영상 썸네일로 교체 예정
-                    const Center(
-                        child: MascotImage(
-                            pose: MascotPose.writing, size: 96, onDark: true)),
-                    const Center(
-                      child: Icon(Icons.play_circle_fill_rounded,
-                          size: 48, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Gap.h16,
-          GestureDetector(
-            onTap: onReadDiary,
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundAlt,
-                borderRadius: AppRadius.button,
-              ),
-              child: Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          DateFormatter.monthDay(date),
+          style: AppTypography.title.copyWith(color: AppColors.primary),
+        ),
+        Gap.h4,
+        const Text(
+          RecordsDummy.homeWrittenTitle,
+          style: AppTypography.bodySecondary,
+        ),
+        Gap.h16,
+        GestureDetector(
+          onTap: () => context.pushNamed(AppRoute.shortformPlayer),
+          child: ClipRRect(
+            borderRadius: AppRadius.card,
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  const Icon(Icons.menu_book_rounded,
-                      size: 20, color: AppColors.primary),
-                  const SizedBox(width: 10),
-                  Text('작성한 일기 읽기',
-                      style: AppTypography.body
-                          .copyWith(fontWeight: FontWeight.w600)),
-                  const Spacer(),
-                  const Icon(Icons.chevron_right_rounded,
-                      color: AppColors.textTertiary),
+                  Container(color: AppColors.callBackground),
+                  // TODO: 일기 쓰는 장면 영상 썸네일로 교체 예정
+                  const Center(
+                    child: MascotImage(
+                      pose: MascotPose.writing,
+                      size: 96,
+                      onDark: true,
+                    ),
+                  ),
+                  const Center(
+                    child: Icon(
+                      Icons.play_circle_fill_rounded,
+                      size: 48,
+                      color: Colors.white,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        Gap.h16,
+        GestureDetector(
+          onTap: onReadDiary,
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: const BoxDecoration(
+              color: AppColors.backgroundAlt,
+              borderRadius: AppRadius.button,
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.menu_book_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  '작성한 일기 읽기',
+                  style: AppTypography.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textTertiary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -266,7 +331,10 @@ class _HomeCardShell extends StatelessWidget {
         borderRadius: AppRadius.card,
         boxShadow: [
           BoxShadow(
-              color: Color(0x0F000000), blurRadius: 20, offset: Offset(0, 6)),
+            color: Color(0x0F000000),
+            blurRadius: 20,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: child,
