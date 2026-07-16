@@ -142,16 +142,22 @@ class _SelectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return OddoCard(
       padding: const EdgeInsets.all(AppSpacing.md),
+      // 두 상태가 항상 같은 높이를 갖도록 각 줄을 고정 높이로 구성한다
+      // (날짜 1줄 + 배지 + 안내 1줄, 줄바꿈 없음).
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(DateFormatter.fullKoreanDate(date),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.body.copyWith(fontWeight: FontWeight.w700)),
           Gap.h8,
           _StatusBadge(isWritten: isWritten),
           Gap.h8,
           Text(
             isWritten ? '일기 · 리포트 · 상담 기록이 저장되어 있어요' : '이 날의 감정을 기록해보세요',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: AppTypography.caption,
           ),
         ],
@@ -167,11 +173,15 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      height: 30,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: isWritten ? AppColors.primary : AppColors.backgroundAlt,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: isWritten ? null : Border.all(color: AppColors.border),
+        // 두 상태 모두 1px 테두리를 차지해 배지 높이가 항상 같도록,
+        // 작성일은 투명 테두리를 쓴다.
+        border: Border.all(
+            color: isWritten ? Colors.transparent : AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
