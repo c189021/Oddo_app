@@ -214,9 +214,11 @@ class _WriteContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // 미작성일은 회색 날짜 — 파랑(기록 있음)/회색(기록 없음)으로
+        // 상태를 색으로 구분 (월간 캘린더 배지와 동일한 규칙).
         Text(
           DateFormatter.monthDay(date),
-          style: AppTypography.title.copyWith(color: AppColors.primary),
+          style: AppTypography.title.copyWith(color: AppColors.textTertiary),
         ),
         Expanded(
           child: Column(
