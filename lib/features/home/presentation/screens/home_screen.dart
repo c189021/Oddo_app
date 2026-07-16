@@ -181,8 +181,10 @@ class _HomeCard extends StatelessWidget {
         index: written ? 0 : 1,
         children: [
           _WrittenContent(date: date, onReadDiary: onReadDiary),
-          // 짧은 미작성 내용은 고정된 카드 안에서 세로 중앙 정렬.
-          Center(
+          // Positioned.fill: 스택 크기(=작성일 내용)에 정확히 맞춰져,
+          // 미작성 내용이 카드 전체 높이를 쓸 수 있다 (날짜 상단 / 히어로
+          // 중앙 / 버튼 하단).
+          Positioned.fill(
             child: _WriteContent(date: date, onWrite: onWrite),
           ),
         ],
@@ -191,7 +193,9 @@ class _HomeCard extends StatelessWidget {
   }
 }
 
-/// Not-written state — prompt to start a diary for [date].
+/// Not-written state — prompt to start a diary for [date]. 파란 날짜는
+/// 작성일 카드와 같은 스타일로 좌상단, 히어로(아이콘+문구)는 중앙, 작성
+/// 버튼은 하단 고정.
 class _WriteContent extends StatelessWidget {
   const _WriteContent({required this.date, required this.onWrite});
 
@@ -201,31 +205,43 @@ class _WriteContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundAlt,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.edit_note_rounded,
-            color: AppColors.textTertiary,
+        Text(
+          DateFormatter.monthDay(date),
+          style: AppTypography.title.copyWith(color: AppColors.primary),
+        ),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundAlt,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.edit_note_rounded,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              Gap.h12,
+              const Text(
+                HomeDummy.writeCardTitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.title,
+              ),
+              Gap.h8,
+              const Text(
+                HomeDummy.writeCardSubtitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySecondary,
+              ),
+            ],
           ),
         ),
-        Gap.h12,
-        Text(DateFormatter.monthDay(date), style: AppTypography.bodySecondary),
-        Gap.h4,
-        const Text(HomeDummy.writeCardTitle, style: AppTypography.title),
-        Gap.h8,
-        const Text(
-          HomeDummy.writeCardSubtitle,
-          textAlign: TextAlign.center,
-          style: AppTypography.bodySecondary,
-        ),
-        Gap.h20,
         PrimaryButton(label: '일기 작성하기', onPressed: onWrite),
       ],
     );
