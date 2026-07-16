@@ -98,6 +98,11 @@ class _CallAnalysisChipState extends State<CallAnalysisChip>
   /// Per-bar base heights — the waveform silhouette the pulse plays around.
   static const List<double> _bases = [6, 12, 8, 16, 10, 14, 7];
 
+  /// Fixed lane height = tallest base + pulse amplitude, so the chip's gray
+  /// box never resizes while the bars move inside it.
+  static const double _amplitude = 4;
+  static const double _laneHeight = 20; // max(_bases)=16 + _amplitude
+
   @override
   void dispose() {
     _controller.dispose();
@@ -119,26 +124,32 @@ class _CallAnalysisChipState extends State<CallAnalysisChip>
               style: AppTypography.caption
                   .copyWith(color: AppColors.callTextSecondary)),
           const SizedBox(height: 4),
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              final t = _controller.value * 2 * pi;
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < _bases.length; i++)
-                    Container(
-                      width: 3,
-                      // 막대마다 위상을 다르게 준 사인파 → 파동이 흐르는 느낌.
-                      height: _bases[i] + 4 * sin(t + i * 0.9),
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(2)),
-                    ),
-                ],
-              );
-            },
+          SizedBox(
+            height: _laneHeight,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final t = _controller.value * 2 * pi;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < _bases.length; i++)
+                      Container(
+                        width: 3,
+                        // 막대마다 위상을 다르게 준 사인파 → 파동이 흐르는
+                        // 느낌. 고정 높이 레인 안에서 중앙 기준으로만 신축.
+                        height: (_bases[i] + _amplitude * sin(t + i * 0.9))
+                            .clamp(2.0, _laneHeight),
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(2)),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
         ],
       ),
