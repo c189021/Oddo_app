@@ -101,6 +101,8 @@ class _MonthlyCalendarScreenState extends ConsumerState<MonthlyCalendarScreen> {
                 padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
                     AppSpacing.xs, AppSpacing.screenH, AppSpacing.xs),
                 child: Column(
+                  // 카드가 항상 하단 버튼과 같은 전체 폭을 갖도록 stretch.
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _SelectCard(date: _selected, isWritten: isWritten),
                     Gap.h12,
