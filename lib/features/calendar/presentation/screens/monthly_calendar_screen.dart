@@ -101,6 +101,8 @@ class _MonthlyCalendarScreenState extends ConsumerState<MonthlyCalendarScreen> {
                 padding: const EdgeInsets.fromLTRB(AppSpacing.screenH,
                     AppSpacing.xs, AppSpacing.screenH, AppSpacing.xs),
                 child: Column(
+                  // 카드가 항상 하단 버튼과 같은 전체 폭을 갖도록 stretch.
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _SelectCard(date: _selected, isWritten: isWritten),
                     Gap.h12,
@@ -130,6 +132,8 @@ class _MonthlyCalendarScreenState extends ConsumerState<MonthlyCalendarScreen> {
   }
 }
 
+/// 작성일/미작성일이 같은 골격(날짜 → 상태 배지 → 안내 한 줄)을 공유하고,
+/// 상태는 배지의 색과 문구로만 표현한다 (개선안 B).
 class _SelectCard extends StatelessWidget {
   const _SelectCard({required this.date, required this.isWritten});
 
@@ -140,69 +144,68 @@ class _SelectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return OddoCard(
       padding: const EdgeInsets.all(AppSpacing.md),
+      // 두 상태가 항상 같은 높이를 갖도록 각 줄을 고정 높이로 구성한다
+      // (날짜 1줄 + 배지 + 안내 1줄, 줄바꿈 없음).
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(DateFormatter.fullKoreanDate(date),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: AppTypography.body.copyWith(fontWeight: FontWeight.w700)),
           Gap.h8,
-          if (isWritten)
-            const Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _StatusChip(icon: Icons.menu_book_rounded, label: '일기 작성 완료'),
-                _StatusChip(icon: Icons.insights_rounded, label: '리포트 있음'),
-                _StatusChip(icon: Icons.chat_bubble_rounded, label: '상담 기록 있음'),
-              ],
-            )
-          else
-            Row(
-              children: [
-                const Icon(Icons.edit_note_rounded,
-                    size: 20, color: AppColors.textTertiary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('아직 작성된 기록이 없어요',
-                          style: AppTypography.bodySecondary
-                              .copyWith(fontWeight: FontWeight.w600)),
-                      const Text('이 날의 감정을 기록해보세요',
-                          style: AppTypography.caption),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          _StatusBadge(isWritten: isWritten),
+          Gap.h8,
+          Text(
+            isWritten ? '일기 · 리포트 · 상담 기록이 저장되어 있어요' : '이 날의 감정을 기록해보세요',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.caption,
+          ),
         ],
       ),
     );
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.isWritten});
+  final bool isWritten;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      height: 30,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft,
+        color: isWritten ? AppColors.primary : AppColors.backgroundAlt,
         borderRadius: BorderRadius.circular(AppRadius.pill),
+        // 두 상태 모두 1px 테두리를 차지해 배지 높이가 항상 같도록,
+        // 작성일은 투명 테두리를 쓴다.
+        border: Border.all(
+            color: isWritten ? Colors.transparent : AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: AppColors.primary),
-          const SizedBox(width: 4),
-          Text(label,
-              style: AppTypography.caption.copyWith(
-                  color: AppColors.primary, fontWeight: FontWeight.w600)),
+          Icon(
+            isWritten
+                ? Icons.check_rounded
+                : Icons.radio_button_unchecked_rounded,
+            size: 14,
+            color:
+                isWritten ? AppColors.textOnPrimary : AppColors.textSecondary,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            isWritten ? '기록 완료' : '기록 없음',
+            style: AppTypography.caption.copyWith(
+              color: isWritten
+                  ? AppColors.textOnPrimary
+                  : AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
