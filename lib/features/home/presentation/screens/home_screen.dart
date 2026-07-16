@@ -177,16 +177,23 @@ class _HomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _HomeCardShell(
-      child: IndexedStack(
-        index: written ? 0 : 1,
+      child: Stack(
         children: [
-          _WrittenContent(date: date, onReadDiary: onReadDiary),
-          // Positioned.fill: 스택 크기(=작성일 내용)에 정확히 맞춰져,
-          // 미작성 내용이 카드 전체 높이를 쓸 수 있다 (날짜 상단 / 히어로
-          // 중앙 / 버튼 하단).
-          Positioned.fill(
-            child: _WriteContent(date: date, onWrite: onWrite),
+          // 작성일 내용은 항상 레이아웃에 참여(maintainSize)해서 카드
+          // 크기를 고정하는 기준이 된다. 미작성일에는 보이지만 않게.
+          Visibility(
+            visible: written,
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            child: _WrittenContent(date: date, onReadDiary: onReadDiary),
           ),
+          // 미작성 내용은 고정된 카드 영역 전체를 채우며 렌더링
+          // (날짜 좌상단 / 히어로 중앙 / 버튼 하단).
+          if (!written)
+            Positioned.fill(
+              child: _WriteContent(date: date, onWrite: onWrite),
+            ),
         ],
       ),
     );
