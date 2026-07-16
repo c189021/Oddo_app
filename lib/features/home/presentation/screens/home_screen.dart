@@ -107,10 +107,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               Expanded(
-                child: Center(
+                // 위 기준 고정 정렬: 작성일에만 하단 탭바가 생겨도 카드가
+                // 세로로 밀리지 않도록, 화면 중앙 정렬 대신 주간 바 아래
+                // 고정 오프셋에 카드를 둔다.
+                child: Align(
+                  alignment: Alignment.topCenter,
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.screenH,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.screenH,
+                      AppSpacing.xl,
+                      AppSpacing.screenH,
+                      AppSpacing.md,
                     ),
                     child: Stack(
                       clipBehavior: Clip.none,
