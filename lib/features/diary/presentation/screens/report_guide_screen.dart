@@ -45,7 +45,7 @@ class _ReportGuideScreenState extends ConsumerState<ReportGuideScreen> {
   Future<void> _completeRecord() async {
     final writtenDate = ref.read(viewingDateProvider);
     final transcript =
-        ref.read(diaryDraftProvider) ?? DummySeed.diaryJan14.transcript;
+        ref.read(diaryDraftProvider).transcript ?? DummySeed.diaryJan14.transcript;
     final sampleEntry = DummySeed.diaryJan14;
     final sampleReport = DummySeed.reportJan14;
     final now = DateTime.now();

@@ -18,6 +18,10 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>얼굴 표정으로 감정을 분석하기 위해 카메라를 사용해요.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>음성으로 일기를 기록하고 감정을 분석하기 위해 마이크를 사용해요.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<!-- 카카오톡 앱 설치 여부 확인/실행용 -->

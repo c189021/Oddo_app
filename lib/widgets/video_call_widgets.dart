@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
+import 'camera_self_view.dart';
 
 /// Shared chrome for the dark video-call screens (tutorial call practice,
 /// baseline measuring, Step 1 live speaking, Step 4 counseling). Extracted so
@@ -73,7 +76,89 @@ class CallChip extends StatelessWidget {
   }
 }
 
-/// Small user-camera preview placeholder (bottom-left of the call view).
+/// "실시간 감정 분석" chip with a live-animated waveform — the shared analysis
+/// indicator for the call screens (Step 1 말하기 / Step 4 상담). The bars pulse
+/// continuously so measurement visibly looks in progress.
+class CallAnalysisChip extends StatefulWidget {
+  const CallAnalysisChip({super.key, this.label = '실시간 감정 분석'});
+
+  final String label;
+
+  @override
+  State<CallAnalysisChip> createState() => _CallAnalysisChipState();
+}
+
+class _CallAnalysisChipState extends State<CallAnalysisChip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  /// Per-bar base heights — the waveform silhouette the pulse plays around.
+  static const List<double> _bases = [6, 12, 8, 16, 10, 14, 7];
+
+  /// Fixed lane height = tallest base + pulse amplitude, so the chip's gray
+  /// box never resizes while the bars move inside it.
+  static const double _amplitude = 4;
+  static const double _laneHeight = 20; // max(_bases)=16 + _amplitude
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.callSurface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.label,
+              style: AppTypography.caption
+                  .copyWith(color: AppColors.callTextSecondary)),
+          const SizedBox(height: 4),
+          SizedBox(
+            height: _laneHeight,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final t = _controller.value * 2 * pi;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < _bases.length; i++)
+                      Container(
+                        width: 3,
+                        // 막대마다 위상을 다르게 준 사인파 → 파동이 흐르는
+                        // 느낌. 고정 높이 레인 안에서 중앙 기준으로만 신축.
+                        height: (_bases[i] + _amplitude * sin(t + i * 0.9))
+                            .clamp(2.0, _laneHeight),
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(2)),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Small user-camera self view (bottom-left of the call view). Shows the live
+/// front camera; falls back to the person-icon placeholder without one.
 class CallUserPreview extends StatelessWidget {
   const CallUserPreview({super.key, this.width = 84, this.height = 112});
 
@@ -89,8 +174,8 @@ class CallUserPreview extends StatelessWidget {
         color: AppColors.callSurface,
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
-      child: const Icon(Icons.person_rounded,
-          size: 34, color: AppColors.callTextSecondary),
+      clipBehavior: Clip.antiAlias,
+      child: const CameraSelfView(),
     );
   }
 }

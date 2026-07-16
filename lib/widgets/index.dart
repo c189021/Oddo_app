@@ -1,5 +1,6 @@
 // Barrel for shared/common widgets.
 export 'app_background.dart';
+export 'camera_self_view.dart';
 export 'card_section_header.dart';
 export 'chat_bubble.dart';
 export 'diary_bottom_nav.dart';
