@@ -70,10 +70,11 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
                       top: 48,
                       right: AppSpacing.screenH,
                       child: CallUserPreview(width: 80, height: 106)),
+                  // 컨트롤 버튼줄(아이콘 56 + 라벨 ≈ 92px) 위로 띄워 겹침 방지.
                   const Positioned(
                     left: AppSpacing.screenH,
                     right: AppSpacing.screenH,
-                    bottom: 84,
+                    bottom: 108,
                     child: _OddoBubble(),
                   ),
                   Positioned(
