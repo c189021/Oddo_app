@@ -121,7 +121,7 @@ lib/
 
 ### 5.3 디자인 토큰 (`lib/theme/`)
 - 색/여백/모서리/타이포는 **반드시 토큰 사용**. 매직 넘버·하드코딩 색 금지.
-  - `AppColors` — **메인 컬러 `#3182F6`**(primary), `primarySoft #EAF2FE`, `authBackground`, `callBackground`(다크) 등
+  - `AppColors` — **메인 컬러 `#7C5CF6`**(primary, 보라 — 2026-07 파랑에서 전환), `primarySoft #F0EBFE`, `authBackground`, `callBackground`(다크) 등
   - `AppSpacing`(+ `Gap.h8/h12/...` 헬퍼), `AppRadius`, `AppTypography`
 - 공통 배경 크롬은 `AppBackground`(연한 하늘색 + 구름) 위젯.
 

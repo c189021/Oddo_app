@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/utils/date_formatter.dart';
+import '../../theme/app_colors.dart';
 
 /// A summary metric tile on the emotion-report screen (49).
 class RecordMetric {
@@ -49,7 +50,7 @@ abstract final class RecordsDummy {
         Color(0xFFF04452)),
     RecordMetric(Icons.bolt_rounded, '스트레스 지수', '보통', Color(0xFFFFB020)),
     RecordMetric(Icons.directions_walk_rounded, '활동 기록', '5회',
-        Color(0xFF3182F6)),
+        AppColors.primary),
   ];
 
   static const String reportComment =

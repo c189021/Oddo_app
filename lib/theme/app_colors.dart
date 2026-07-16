@@ -6,27 +6,28 @@ import 'package:flutter/material.dart';
 /// widgets must reference these tokens (never raw `Color(0x...)`), so that a
 /// palette change happens in exactly one place.
 ///
-/// Brand color is #3182F6 (a calm, trustworthy blue). Backgrounds stay white /
-/// very-light-grey; only light-blue tints are allowed as secondary surfaces.
+/// Brand color is #7C5CF6 (a soft, comforting violet). Backgrounds stay white /
+/// very-light-grey; only light-lavender tints are allowed as secondary
+/// surfaces. (2026-07 파랑 #3182F6 → 보라 테마 전환 — 토큰만 교체)
 abstract final class AppColors {
   AppColors._();
 
   // --- Brand / primary ---------------------------------------------------
-  static const Color primary = Color(0xFF3182F6);
-  static const Color primaryPressed = Color(0xFF1B64DA);
+  static const Color primary = Color(0xFF7C5CF6);
+  static const Color primaryPressed = Color(0xFF6242E0);
 
-  /// Light-blue card / selected-state background (연한 하늘색 카드).
-  static const Color primarySoft = Color(0xFFEAF2FE);
+  /// Light-lavender card / selected-state background (연보라 카드).
+  static const Color primarySoft = Color(0xFFF0EBFE);
 
   /// Border for soft/selected cards.
-  static const Color primarySoftBorder = Color(0xFFCCE0FD);
+  static const Color primarySoftBorder = Color(0xFFD9CDFB);
 
   // --- Auth / onboarding surfaces ---------------------------------------
-  /// Light-blue background used on splash / auth / onboarding screens.
-  static const Color authBackground = Color(0xFFEFF4FB);
+  /// Light-lavender background used on splash / auth / onboarding screens.
+  static const Color authBackground = Color(0xFFF3F0FB);
 
   /// Decorative cloud/blob tint layered on the auth background corners.
-  static const Color cloud = Color(0xFFE1EBF8);
+  static const Color cloud = Color(0xFFE7E1F6);
 
   /// Kakao brand yellow — used only for the Kakao login icon chip.
   static const Color kakao = Color(0xFFFEE500);
