@@ -7,7 +7,6 @@ import '../../../../core/constants/app_assets.dart';
 import '../../../../core/media/audio_recorder_service.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../theme/app_colors.dart';
-import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/mascot_image.dart';
@@ -88,7 +87,9 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
                         icon: Icons.graphic_eq_rounded, label: '음성 인식 중'),
                   ),
                   const Positioned(
-                      top: 8, right: AppSpacing.screenH, child: _AnalysisChip()),
+                      top: 8,
+                      right: AppSpacing.screenH,
+                      child: CallAnalysisChip()),
                   // 우상단(실시간 감정 분석 칩 아래) — 하단 버튼과 겹치지 않게.
                   const Positioned(
                       top: 76,
@@ -128,44 +129,3 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
   }
 }
 
-/// Step 1-specific "real-time emotion analysis" chip with a mini waveform.
-class _AnalysisChip extends StatelessWidget {
-  const _AnalysisChip();
-
-  static const List<double> _bars = [6, 12, 8, 16, 10, 14, 7];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.callSurface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('실시간 감정 분석',
-              style: AppTypography.caption
-                  .copyWith(color: AppColors.callTextSecondary)),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              for (final h in _bars)
-                Container(
-                  width: 3,
-                  height: h,
-                  margin: const EdgeInsets.symmetric(horizontal: 1),
-                  decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(2)),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

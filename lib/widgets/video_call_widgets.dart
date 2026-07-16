@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -68,6 +70,76 @@ class CallChip extends StatelessWidget {
           Text(label,
               style: AppTypography.caption
                   .copyWith(color: AppColors.callTextPrimary)),
+        ],
+      ),
+    );
+  }
+}
+
+/// "실시간 감정 분석" chip with a live-animated waveform — the shared analysis
+/// indicator for the call screens (Step 1 말하기 / Step 4 상담). The bars pulse
+/// continuously so measurement visibly looks in progress.
+class CallAnalysisChip extends StatefulWidget {
+  const CallAnalysisChip({super.key, this.label = '실시간 감정 분석'});
+
+  final String label;
+
+  @override
+  State<CallAnalysisChip> createState() => _CallAnalysisChipState();
+}
+
+class _CallAnalysisChipState extends State<CallAnalysisChip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat();
+
+  /// Per-bar base heights — the waveform silhouette the pulse plays around.
+  static const List<double> _bases = [6, 12, 8, 16, 10, 14, 7];
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.callSurface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.label,
+              style: AppTypography.caption
+                  .copyWith(color: AppColors.callTextSecondary)),
+          const SizedBox(height: 4),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, _) {
+              final t = _controller.value * 2 * pi;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < _bases.length; i++)
+                    Container(
+                      width: 3,
+                      // 막대마다 위상을 다르게 준 사인파 → 파동이 흐르는 느낌.
+                      height: _bases[i] + 4 * sin(t + i * 0.9),
+                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                      decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(2)),
+                    ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

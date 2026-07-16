@@ -59,15 +59,15 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
                   const Center(
                       child: MascotImage(
                           pose: MascotPose.counselor, size: 200, onDark: true)),
+                  // Step1과 동일한 실시간 분석 인디케이터로 통일.
                   const Positioned(
                     top: 8,
                     right: AppSpacing.screenH,
-                    child: CallChip(
-                        icon: Icons.show_chart_rounded, label: '감정 변화 측정 중'),
+                    child: CallAnalysisChip(),
                   ),
-                  // 우상단(감정 변화 측정 칩 아래) — 자막 말풍선과 겹치지 않게.
+                  // 우상단(실시간 감정 분석 칩 아래) — 자막 말풍선과 겹치지 않게.
                   const Positioned(
-                      top: 48,
+                      top: 76,
                       right: AppSpacing.screenH,
                       child: CallUserPreview(width: 80, height: 106)),
                   // 컨트롤 버튼줄(아이콘 56 + 라벨 ≈ 92px) 위로 띄워 겹침 방지.
