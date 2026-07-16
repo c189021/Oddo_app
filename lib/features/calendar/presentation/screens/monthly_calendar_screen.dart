@@ -130,6 +130,8 @@ class _MonthlyCalendarScreenState extends ConsumerState<MonthlyCalendarScreen> {
   }
 }
 
+/// 작성일/미작성일이 같은 골격(날짜 → 상태 배지 → 안내 한 줄)을 공유하고,
+/// 상태는 배지의 색과 문구로만 표현한다 (개선안 B).
 class _SelectCard extends StatelessWidget {
   const _SelectCard({required this.date, required this.isWritten});
 
@@ -146,63 +148,52 @@ class _SelectCard extends StatelessWidget {
           Text(DateFormatter.fullKoreanDate(date),
               style: AppTypography.body.copyWith(fontWeight: FontWeight.w700)),
           Gap.h8,
-          if (isWritten)
-            const Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _StatusChip(icon: Icons.menu_book_rounded, label: '일기 작성 완료'),
-                _StatusChip(icon: Icons.insights_rounded, label: '리포트 있음'),
-                _StatusChip(icon: Icons.chat_bubble_rounded, label: '상담 기록 있음'),
-              ],
-            )
-          else
-            Row(
-              children: [
-                const Icon(Icons.edit_note_rounded,
-                    size: 20, color: AppColors.textTertiary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('아직 작성된 기록이 없어요',
-                          style: AppTypography.bodySecondary
-                              .copyWith(fontWeight: FontWeight.w600)),
-                      const Text('이 날의 감정을 기록해보세요',
-                          style: AppTypography.caption),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+          _StatusBadge(isWritten: isWritten),
+          Gap.h8,
+          Text(
+            isWritten ? '일기 · 리포트 · 상담 기록이 저장되어 있어요' : '이 날의 감정을 기록해보세요',
+            style: AppTypography.caption,
+          ),
         ],
       ),
     );
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.isWritten});
+  final bool isWritten;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.primarySoft,
+        color: isWritten ? AppColors.primary : AppColors.backgroundAlt,
         borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: isWritten ? null : Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: AppColors.primary),
-          const SizedBox(width: 4),
-          Text(label,
-              style: AppTypography.caption.copyWith(
-                  color: AppColors.primary, fontWeight: FontWeight.w600)),
+          Icon(
+            isWritten
+                ? Icons.check_rounded
+                : Icons.radio_button_unchecked_rounded,
+            size: 14,
+            color:
+                isWritten ? AppColors.textOnPrimary : AppColors.textSecondary,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            isWritten ? '기록 완료' : '기록 없음',
+            style: AppTypography.caption.copyWith(
+              color: isWritten
+                  ? AppColors.textOnPrimary
+                  : AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
