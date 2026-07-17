@@ -3,6 +3,10 @@
 /// `MascotImage` renders a styled placeholder, so missing files are harmless.
 enum MascotPose {
   front,
+
+  /// 머리+양손만 보이는 '빼꼼' 포즈 — 홈 카드 윗변을 잡는 연출 전용.
+  /// (하단이 손 바로 아래에서 잘린 이미지)
+  peeking,
   waving,
   thinking,
   writing,

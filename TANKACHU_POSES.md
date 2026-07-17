@@ -1,17 +1,16 @@
 # 탄카츄(Tankachu) 화면별 포즈/이미지 목록
 
-이미지 생성 AI에 넘기기 위한 핸드오프 목록입니다. 현재 모든 자리는 단일 플레이스홀더
-`assets/images/character/` … 실제로는 `assets/characters/tankachu_placeholder.png` 하나를
-`MascotImage(pose:)`로 공유하고 있고, 각 화면에 `// TODO …교체 예정` 주석으로 의도한 포즈를
-표시해 두었습니다.
+> ✅ **2026-07-17: 실제 포즈 아트 16종 실장 완료.**
+> `assets/images/character/<pose>.png` (투명 배경, 1024~2048px)이 전부 들어갔고
+> `MascotImage`가 포즈별 이미지를 사용합니다 (없는 포즈는 플레이스홀더로 폴백).
+> 코드의 `// TODO …교체 예정` 주석은 이제 "장면 맞춤 아트로 더 다듬을 수 있는 지점"
+> 표시로만 남아 있습니다 (예: 38번 "헤드폰 끼고 노트북 보는" 같은 세부 연출).
+> 아래 3) 마스코트 외 이미지(썸네일/일러스트 7곳)는 **아직 미실장**.
 
 - 캐릭터 기준 시트: `_docs/character_sheet.png` (16 포즈)
-- 메인 컬러: #3182F6 / 배경: 흰색·연한 하늘색
-- 교체 방법: 포즈별 PNG를 `assets/images/character/<pose>.png`로 추가한 뒤,
-  `lib/widgets/mascot_image.dart`의 `Image.asset(AppAssets.tankachuPlaceholder)`를
-  `Image.asset(AppAssets.mascot(pose))`로 바꾸면 일괄 적용됩니다
-  (`MascotPose` enum: front/waving/thinking/writing/heart/clipboard/mic/mirror/shield/
-  celebrate/sorry/letter/check/camera/counselor/wink).
+- 메인 컬러: #7C5CF6 (보라, 2026-07 전환) / 배경: 흰색·연보라
+- 포즈 enum: front/waving/thinking/writing/heart/clipboard/mic/mirror/shield/
+  celebrate/sorry/letter/check/camera/counselor/wink
 
 ## 1) 화면별 마스코트 포즈
 
