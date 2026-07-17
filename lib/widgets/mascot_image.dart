@@ -6,11 +6,9 @@ import '../theme/app_typography.dart';
 
 /// Renders the mascot (탄카츄) in a given [pose].
 ///
-/// For now every pose shows one unified placeholder image
-/// ([AppAssets.tankachuPlaceholder]); [pose] still carries the intended
-/// expression so screens document it and per-pose art can be swapped in later
-/// (switch to [AppAssets.mascot]`(pose)`). If even the placeholder is missing,
-/// a styled fallback box is drawn.
+/// Uses the real per-pose art from `assets/images/character/{pose}.png`
+/// (2026-07-17 실장). Fallback chain: 포즈 이미지가 없으면 통합
+/// 플레이스홀더([AppAssets.tankachuPlaceholder]), 그것도 없으면 스타일 박스.
 class MascotImage extends StatelessWidget {
   const MascotImage({
     super.key,
@@ -27,12 +25,22 @@ class MascotImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 원본이 2048px라 표시 크기만큼만 디코드해 메모리를 아낀다.
+    final cacheWidth =
+        (size * MediaQuery.devicePixelRatioOf(context)).round();
     return Image.asset(
-      AppAssets.tankachuPlaceholder,
+      AppAssets.mascot(pose),
       width: size,
       height: size,
       fit: BoxFit.contain,
-      errorBuilder: (_, _, _) => _placeholder(),
+      cacheWidth: cacheWidth,
+      errorBuilder: (_, _, _) => Image.asset(
+        AppAssets.tankachuPlaceholder,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => _placeholder(),
+      ),
     );
   }
 
