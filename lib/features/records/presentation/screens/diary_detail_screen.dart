@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_assets.dart';
+import '../../../../core/utils/date_formatter.dart';
 import '../../../../data/dummy/records_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
@@ -64,8 +65,12 @@ class DiaryDetailScreen extends ConsumerWidget {
                       ],
                     ),
                     Gap.h4,
-                    Text(RecordsDummy.diaryWrittenAt(date),
-                        style: AppTypography.caption),
+                    Text(
+                      entry.writtenAt != null
+                          ? '${DateFormatter.fullKoreanDate(date)} · ${DateFormatter.hhmm(entry.writtenAt!)} 작성'
+                          : DateFormatter.fullKoreanDate(date),
+                      style: AppTypography.caption,
+                    ),
                     Gap.h16,
                     Text(entry.transcript,
                         style: AppTypography.body.copyWith(height: 1.7)),

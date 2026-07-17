@@ -46,7 +46,7 @@ class TutorialCallScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const CallStatusRow(label: 'AI와 실시간 대화 중', timer: '00:02:48'),
+            const CallStatusRow(label: 'AI와 실시간 대화 중'),
             Gap.h8,
             Expanded(
               child: Stack(

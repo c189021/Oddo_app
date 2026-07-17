@@ -144,6 +144,15 @@ class AuthController extends Notifier<AuthState> {
   Future<void> sendPasswordReset({required String email}) =>
       _repo.sendPasswordReset(email: email);
 
+  /// Updates the nickname on the profile and in the in-memory session.
+  Future<void> updateNickname(String nickname) async {
+    await _repo.updateNickname(nickname: nickname);
+    final user = state.user;
+    if (user != null) {
+      state = AuthState(user: user.copyWith(nickname: nickname));
+    }
+  }
+
   Future<void> logout() async {
     await _repo.logout();
     _leaveSession();

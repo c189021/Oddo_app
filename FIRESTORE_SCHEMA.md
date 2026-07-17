@@ -63,6 +63,7 @@ users/{uid}                              ← AppUser        (계정 프로필)
 | `videoUrl` | string? | 생성된 숏폼 Storage URL (Step3 전엔 없음) |
 | `emotionIntensity` | int 0–100 | |
 | `emotionStability` | int 0–100 | |
+| `writtenAt` | string(ISO)? | 기록 완료 시각 (2026-07-18 추가, 구 문서엔 없을 수 있음) |
 
 > "작성된 날짜 집합"(`recordedDaysProvider`)은 이 컬렉션의 **문서 id 목록**으로 계산한다.
 

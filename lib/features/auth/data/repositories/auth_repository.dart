@@ -24,6 +24,10 @@ abstract interface class AuthRepository {
 
   Future<void> updateOnboardingDone({required bool done});
 
+  Future<void> updateNickname({required String nickname});
+
+  Future<bool> hasPasswordLogin();
+
   Future<void> logout();
 
   Future<void> deleteAccount();

@@ -45,6 +45,13 @@ class AuthRepositoryImpl implements AuthRepository {
       _dataSource.updateOnboardingDone(done: done);
 
   @override
+  Future<void> updateNickname({required String nickname}) =>
+      _dataSource.updateNickname(nickname: nickname);
+
+  @override
+  Future<bool> hasPasswordLogin() => _dataSource.hasPasswordLogin();
+
+  @override
   Future<void> logout() => _dataSource.logout();
 
   @override

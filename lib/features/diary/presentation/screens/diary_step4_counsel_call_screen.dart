@@ -49,7 +49,6 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
             ),
             const CallStatusRow(
               label: DiaryFlowDummy.counselStatus,
-              timer: DiaryFlowDummy.counselTimer,
               dotColor: AppColors.success,
             ),
             Expanded(

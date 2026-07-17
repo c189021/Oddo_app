@@ -34,6 +34,13 @@ abstract interface class AuthDataSource {
   /// Persists onboarding completion on the user profile.
   Future<void> updateOnboardingDone({required bool done});
 
+  /// Updates the profile nickname.
+  Future<void> updateNickname({required String nickname});
+
+  /// True when this account can change its password (email/password login).
+  /// Social-only accounts (Google/Kakao) return false.
+  Future<bool> hasPasswordLogin();
+
   Future<void> logout();
 
   /// Permanently deletes the account and its profile data.
