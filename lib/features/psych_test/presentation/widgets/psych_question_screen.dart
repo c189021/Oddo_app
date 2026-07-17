@@ -8,6 +8,7 @@ import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/app_background.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/step_progress_bar.dart';
@@ -189,7 +190,15 @@ class _Header extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.help_outline_rounded, size: 20),
-          onPressed: () {},
+          onPressed: () => showHelpSheet(
+            context,
+            title: '심리테스트 도움말',
+            items: const [
+              '정답은 없어요. 평소의 나와 가장 가까운 쪽을 골라주세요.',
+              '결과는 챗봇 페르소나와 상담 맞춤화에 사용돼요.',
+              '중간에 나가도 이어하기로 다시 진행할 수 있어요.',
+            ],
+          ),
         ),
       ],
     );

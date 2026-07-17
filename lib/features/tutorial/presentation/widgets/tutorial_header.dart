@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../../widgets/help_sheet.dart';
 
 /// Shared tutorial top bar: leading (close/back) + centered title + help, then
 /// a 5-dot step progress and an optional sub-step label. Light + dark variants.
@@ -59,7 +60,15 @@ class TutorialHeader extends StatelessWidget {
             if (showHelp)
               IconButton(
                 icon: Icon(Icons.help_outline_rounded, size: 20, color: fg),
-                onPressed: () {}, // TODO: open tutorial help later.
+                onPressed: () => showHelpSheet(
+                  context,
+                  title: '튜토리얼 도움말',
+                  items: const [
+                    'Oddo 사용법을 5단계로 짧게 알려드려요.',
+                    '각 단계의 "다음" 버튼으로 순서대로 진행돼요.',
+                    '연습 통화에서는 실제 기록이 저장되지 않으니 편하게 해보세요.',
+                  ],
+                ),
               )
             else
               const SizedBox(width: 48),

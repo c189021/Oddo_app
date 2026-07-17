@@ -14,6 +14,7 @@ abstract final class AppRoute {
   static const String socialExtraInfo = 'socialExtraInfo'; // 4
   // 5 로그인 실패 모달 → dialog (see auth feature), not a route
   static const String findPassword = 'findPassword'; // 6
+  static const String termsDetail = 'termsDetail'; // 약관 뷰어 (보조)
 
   // ── Home (7, 47) ─────────────────────────────────────────────────────────
   static const String home = 'home'; // 7 미작성일
@@ -94,6 +95,7 @@ abstract final class AppPath {
   static const String signup = '/signup';
   static const String socialExtraInfo = '/social-extra-info';
   static const String findPassword = '/find-password';
+  static const String termsDetail = '/terms';
 
   static const String home = '/home';
   static const String homeWritten = '/home/written';

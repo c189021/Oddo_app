@@ -31,6 +31,22 @@ class AudioRecorderService {
     }
   }
 
+  /// 녹음 일시정지 (마이크 음소거 버튼용). 실패는 조용히 무시.
+  Future<void> pause() async {
+    if (!_recording) return;
+    try {
+      await _recorder.pause();
+    } catch (_) {}
+  }
+
+  /// 일시정지된 녹음 재개.
+  Future<void> resume() async {
+    if (!_recording) return;
+    try {
+      await _recorder.resume();
+    } catch (_) {}
+  }
+
   /// Stops and returns the recorded file's path (null when nothing recorded).
   Future<String?> stop() async {
     if (!_recording) return null;

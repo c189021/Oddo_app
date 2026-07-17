@@ -9,6 +9,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/video_call_widgets.dart';
 import '../../application/diary_draft_provider.dart';
@@ -25,11 +26,25 @@ class DiaryStep1LiveScreen extends ConsumerStatefulWidget {
 }
 
 class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
+  bool _micMuted = false;
+  bool _speakerOff = false;
+
   @override
   void initState() {
     super.initState();
     ref.read(audioRecorderProvider).start(
         fileName: 'diary_${DateFormatter.dateKey(DateTime.now())}_step1');
+  }
+
+  /// 마이크 토글 = 녹음 일시정지/재개.
+  Future<void> _toggleMic() async {
+    final recorder = ref.read(audioRecorderProvider);
+    if (_micMuted) {
+      await recorder.resume();
+    } else {
+      await recorder.pause();
+    }
+    if (mounted) setState(() => _micMuted = !_micMuted);
   }
 
   Future<void> _endCall() async {
@@ -68,7 +83,15 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
                 IconButton(
                   icon: const Icon(Icons.help_outline_rounded,
                       size: 20, color: AppColors.callTextPrimary),
-                  onPressed: () {},
+                  onPressed: () => showHelpSheet(
+                    context,
+                    title: '말하기 도움말',
+                    items: const [
+                      '오늘 있었던 일을 통화하듯 편하게 이야기해주세요.',
+                      '마이크 버튼으로 잠시 멈췄다가 이어 말할 수 있어요.',
+                      '통화 종료를 누르면 녹음이 끝나고 분석이 시작돼요.',
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -103,8 +126,13 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const CallControlButton(
-                              icon: Icons.mic_rounded, label: '마이크'),
+                          CallControlButton(
+                            icon: _micMuted
+                                ? Icons.mic_off_rounded
+                                : Icons.mic_rounded,
+                            label: _micMuted ? '음소거 중' : '마이크',
+                            onTap: _toggleMic,
+                          ),
                           const SizedBox(width: 20),
                           CallControlButton(
                             icon: Icons.call_end_rounded,
@@ -113,8 +141,14 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
                             onTap: _endCall,
                           ),
                           const SizedBox(width: 20),
-                          const CallControlButton(
-                              icon: Icons.volume_up_rounded, label: '스피커'),
+                          CallControlButton(
+                            icon: _speakerOff
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            label: '스피커',
+                            onTap: () =>
+                                setState(() => _speakerOff = !_speakerOff),
+                          ),
                         ],
                       ),
                     ),

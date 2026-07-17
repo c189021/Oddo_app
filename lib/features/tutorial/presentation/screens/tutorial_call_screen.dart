@@ -7,13 +7,23 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/video_call_widgets.dart';
 
 /// Screen 11 — 튜토리얼 통화 연습 (1/5). Video-call style practice → 2/5.
-class TutorialCallScreen extends StatelessWidget {
+class TutorialCallScreen extends StatefulWidget {
   const TutorialCallScreen({super.key});
+
+  @override
+  State<TutorialCallScreen> createState() => _TutorialCallScreenState();
+}
+
+class _TutorialCallScreenState extends State<TutorialCallScreen> {
+  // 연습용 시각 상태 토글 (실제 녹음 없음).
+  bool _micMuted = false;
+  bool _speakerOff = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +52,15 @@ class TutorialCallScreen extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.help_outline_rounded,
                       color: AppColors.callTextPrimary),
-                  onPressed: () {},
+                  onPressed: () => showHelpSheet(
+                    context,
+                    title: '통화 연습 도움말',
+                    items: const [
+                      '실제 일기 작성과 같은 영상통화 화면이에요.',
+                      '연습이니까 아무 말이나 편하게 해봐도 돼요.',
+                      '아래 통화 종료 버튼을 누르면 다음 단계로 넘어가요.',
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -78,7 +96,7 @@ class TutorialCallScreen extends StatelessWidget {
                       top: 56,
                       right: AppSpacing.screenH,
                       child: CallUserPreview()),
-                  const Positioned(
+                  Positioned(
                     right: 0,
                     left: 0,
                     bottom: 12,
@@ -86,12 +104,24 @@ class TutorialCallScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CallControlButton(icon: Icons.mic_rounded),
-                          SizedBox(width: 20),
                           CallControlButton(
+                            icon: _micMuted
+                                ? Icons.mic_off_rounded
+                                : Icons.mic_rounded,
+                            onTap: () =>
+                                setState(() => _micMuted = !_micMuted),
+                          ),
+                          const SizedBox(width: 20),
+                          const CallControlButton(
                               icon: Icons.call_end_rounded, danger: true),
-                          SizedBox(width: 20),
-                          CallControlButton(icon: Icons.volume_up_rounded),
+                          const SizedBox(width: 20),
+                          CallControlButton(
+                            icon: _speakerOff
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            onTap: () =>
+                                setState(() => _speakerOff = !_speakerOff),
+                          ),
                         ],
                       ),
                     ),

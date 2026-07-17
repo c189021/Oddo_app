@@ -5,6 +5,8 @@ export 'card_section_header.dart';
 export 'chat_bubble.dart';
 export 'diary_bottom_nav.dart';
 export 'duration_chip.dart';
+export 'elapsed_timer_text.dart';
+export 'help_sheet.dart';
 export 'icon_info_tile.dart';
 export 'info_callout.dart';
 export 'mascot_image.dart';

@@ -14,6 +14,7 @@ import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/app_background.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/oddo_card.dart';
 import '../../../../widgets/primary_button.dart';
@@ -58,7 +59,15 @@ class _MonthlyCalendarScreenState extends ConsumerState<MonthlyCalendarScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.help_outline_rounded, size: 20),
-                    onPressed: () {},
+                    onPressed: () => showHelpSheet(
+                      context,
+                      title: '날짜 선택 도움말',
+                      items: const [
+                        '보라색 배경 날짜는 일기가 작성된 날이에요.',
+                        '날짜를 고르면 아래 카드에서 상태를 확인할 수 있어요.',
+                        '지난 날짜를 골라 그날의 일기를 새로 쓸 수도 있어요.',
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -8,13 +8,25 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/video_call_widgets.dart';
 
 /// Screen 44 — Step 4. 영상통화 상담. Video-call style counseling. 상담 종료 →
 /// 리포트 생성.
-class DiaryStep4CounselCallScreen extends StatelessWidget {
+class DiaryStep4CounselCallScreen extends StatefulWidget {
   const DiaryStep4CounselCallScreen({super.key});
+
+  @override
+  State<DiaryStep4CounselCallScreen> createState() =>
+      _DiaryStep4CounselCallScreenState();
+}
+
+class _DiaryStep4CounselCallScreenState
+    extends State<DiaryStep4CounselCallScreen> {
+  // 시각 상태 토글 — 실제 오디오 입출력은 Phase 5(상담봇 음성)에서 연결.
+  bool _micMuted = false;
+  bool _speakerOff = false;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +55,15 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.help_outline_rounded,
                       color: AppColors.callTextPrimary),
-                  onPressed: () {},
+                  onPressed: () => showHelpSheet(
+                    context,
+                    title: '상담하기 도움말',
+                    items: const [
+                      '탄카츄가 오늘의 감정을 함께 돌아봐줘요.',
+                      '떠오르는 대로 편하게 답하면 돼요. 정답은 없어요.',
+                      '상담 종료를 누르면 감정 리포트가 만들어져요.',
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -84,8 +104,14 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const CallControlButton(
-                              icon: Icons.mic_rounded, label: '마이크'),
+                          CallControlButton(
+                            icon: _micMuted
+                                ? Icons.mic_off_rounded
+                                : Icons.mic_rounded,
+                            label: _micMuted ? '음소거 중' : '마이크',
+                            onTap: () =>
+                                setState(() => _micMuted = !_micMuted),
+                          ),
                           const SizedBox(width: 20),
                           CallControlButton(
                             icon: Icons.call_end_rounded,
@@ -95,8 +121,14 @@ class DiaryStep4CounselCallScreen extends StatelessWidget {
                                 .pushReplacementNamed(AppRoute.reportGenerating),
                           ),
                           const SizedBox(width: 20),
-                          const CallControlButton(
-                              icon: Icons.volume_up_rounded, label: '스피커'),
+                          CallControlButton(
+                            icon: _speakerOff
+                                ? Icons.volume_off_rounded
+                                : Icons.volume_up_rounded,
+                            label: '스피커',
+                            onTap: () =>
+                                setState(() => _speakerOff = !_speakerOff),
+                          ),
                         ],
                       ),
                     ),
