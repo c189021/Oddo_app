@@ -123,8 +123,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Padding(
-                          // 마스코트 박스(170) - 겹침(26) = 카드 시작 오프셋.
-                          padding: const EdgeInsets.only(top: 144),
+                          // 마스코트 박스(170) - 겹침(14) = 카드 시작 오프셋.
+                          padding: const EdgeInsets.only(top: 156),
                           child: _HomeCard(
                             date: selected,
                             written: written,
