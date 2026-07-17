@@ -1,83 +1,126 @@
 # Oddo Phase-2 로드맵 — 프로토타입 → 실제 동작 앱
 
-> 확정된 방향 (2026-06-06 결정)
-> - **백엔드**: Firebase(인증·DB·파일저장) + **Python FastAPI AI 서버**(음성/표정 분석·LLM 오케스트레이션) 하이브리드
+> 확정된 방향 (2026-06-06 결정, 이후 갱신)
+> - **백엔드**: Firebase(인증·DB) + **Python FastAPI AI 서버**(음성/표정 분석·LLM 오케스트레이션) 하이브리드
 > - **AI**: 자체 모델 없이 **외부 LLM API**(상담봇·감정분석·리포트) + 오픈소스(음성 librosa, 표정 MediaPipe)
-> - **로그인**: **이메일/비밀번호 우선** (소셜은 추후)
-> - **Text-to-Video 숏폼**: **마지막 단계로 미룸** (그 전까지 현재 UI 유지)
-> - **탄카츄 캐릭터·앱 색상**: **맨 마지막까지 현재 그대로 유지** (최종 단계에서 일괄 교체)
+> - **로그인**: ~~이메일 우선~~ → **이메일 + Google + Kakao 전부 완료** (Apple은 백로그)
+> - **Text-to-Video 숏폼**: 마지막 단계. ★ **립싱크 + 한국어 대사 오디오 포함 목표, 최대 1분** (2026-07-14 확정)
+> - **탄카츄·앱 색상**: ~~마지막에 교체~~ → **앞당겨 완료** (2026-07-17: 보라 테마 #7C5CF6 + 실제 포즈 아트 17종)
 >
 > 진행 원칙: 위에서 아래로 순서대로. 각 Phase는 끝날 때마다 `dart fix --apply` → `flutter analyze` → `flutter test` 통과 필수 (CLAUDE.md §10).
+> **각 Phase의 "📦 준비물"을 시작 전에 먼저 확보할 것** — 코드 밖에서 준비해야 하는 계정/키/자료/팀 결정 목록.
 
 ---
 
-## Phase 0 — 기반 공사 (모든 것의 전제)
+## ✅ Phase 0 — 기반 공사 (완료, PR #1)
 
-- [ ] Firebase 프로젝트 생성 + FlutterFire CLI 연동 (`firebase_core`) — Android/iOS 등록
-- [ ] 의존성 추가 (팀 합의 후 한 PR로): `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `shared_preferences`, `permission_handler`, `camera`, `record`, `speech_to_text`, `dio`, `video_player`
-- [ ] flavor 완성: `main_prod.dart` 추가, `AppConfig.prod` 실값, 시크릿/키 관리 방식 결정(`--dart-define` 권장, 키를 레포에 커밋 금지)
-- [ ] `core/network/api_client.dart` 구현 (dio 기반, AI 서버용 베이스클라이언트) + 예외 → `Failure` 매핑
-- [ ] 로컬 영구 저장 래퍼 (`shared_preferences` 기반 `LocalStore`) — 이후 Phase에서 공용
+- [x] Firebase 프로젝트 생성(`oddo-emotion-diary`) + FlutterFire 연동 — Android/iOS 앱 등록
+- [x] 의존성 추가: firebase 4종, `shared_preferences`, `permission_handler`, `camera`, `record`, `speech_to_text`, `dio`, `video_player`, `path_provider`, `google_sign_in`, `kakao_flutter_sdk_user`
+- [x] flavor: `main_prod.dart` + `--dart-define=ODDO_API_BASE_URL` 주입
+- [x] `DioApiClient` 구현 + 예외 → `Failure` 매핑
+- [x] `LocalStore` (shared_preferences 래퍼)
+- 부속 완료: Firestore 스키마 v1(`FIRESTORE_SCHEMA.md`, PR #2) + DB 생성·보안 규칙 배포(PR #3)
 
-## Phase 1 — 인증 (첫 로그인부터 실제로)
+## ✅ Phase 1 — 인증 (완료, PR #4·#5·#6)
 
-- [ ] Firebase Auth **이메일 가입/로그인/로그아웃/비밀번호 재설정** 실연결 (기존 auth repository 스캐폴드 사용, 화면은 이미 있음)
-- [ ] 입력 검증 (이메일 형식, 비밀번호 규칙, 에러 메시지 — 5.로그인 실패 모달 연결)
-- [ ] **로그인 유지/자동 로그인** + `route_guard.dart`의 `appRedirect` 구현 (스플래시 → 로그인 or 홈 분기)
-- [ ] 마이페이지 실데이터(이메일/닉네임), 회원 탈퇴
-- [ ] (추후) 소셜 로그인 — Google/Kakao/Apple 은 백로그로
+- [x] 이메일 가입/로그인/로그아웃/비밀번호 재설정 + 입력 검증 + 실패 모달
+- [x] 자동 로그인(로그인 상태 유지) + `route_guard` 실동작
+- [x] 마이페이지 실데이터, 로그아웃/회원 탈퇴
+- [x] **Google 로그인** (SHA-1 등록, 신규 유저 → 추가정보 → 프로필 생성)
+- [x] **Kakao 로그인** (OIDC — Firebase 클라이언트 ID는 카카오 **네이티브 앱 키**)
+- 백로그: Apple 로그인 (iOS 출시 결정 시 필수)
 
-## Phase 2 — 데이터 모델 & 영구 저장 (앱의 뼈대 데이터)
+## ✅ Phase 2 — 데이터 & 영구 저장 (완료, PR #7)
 
-- [ ] Firestore 스키마 설계: `users/{uid}` + 하위 `diaries/{date}`, `reports/{date}`, `counsel_sessions/{date}`, `baseline_profile`, `persona`, `psych_results`
-- [ ] **화면의 `*Dummy` 직접 읽기 → Repository/Provider 경유로 전환** (auth·diary 스캐폴드 패턴을 전 기능으로 확장, `AppConfig.useDummyData` 스위치로 더미/실데이터 전환 가능하게)
-- [ ] **날짜별 콘텐츠 연결**: 일기상세/감정리포트/상담기록이 `viewingDateProvider` 날짜의 실제 데이터를 표시
-- [ ] **영구 저장**: `recordedDaysProvider`(작성일 집합), 온보딩 완료, 페르소나 선택 → Firestore + 로컬 캐시 (재시작해도 유지)
-- [ ] 심리테스트 결과 저장/이어하기 상태 저장
+- [x] `DiaryRemoteDataSource`: 일기/리포트/상담록 날짜 키 저장·조회 (배치 저장)
+- [x] `recordedDaysProvider` Firestore 기반 (재시작 후 유지)
+- [x] 기록 화면 3종(48/49/50) 날짜별 실데이터 + 로딩/빈 상태
+- [x] 페르소나 설정 저장 (`meta/persona`)
+- 참고: 일기 요약/리포트/상담 **내용 자체**는 Phase 5 전까지 샘플 콘텐츠가 저장됨
 
-## Phase 3 — 디바이스 권한 & 미디어
+## ✅ Phase 3 — 디바이스 권한 & 미디어 (완료, PR #8)
 
-- [ ] `permission_handler`로 **카메라/마이크 실제 OS 권한 요청** (9.권한 안내 화면과 연결, 거부 시 UX)
-- [ ] **카메라 프리뷰** 연결: 통화형 화면들(11 튜토리얼 통화, 19 baseline 측정, 37 Step1, 44 Step4)의 내 화면 미리보기
-- [ ] 마이크 **녹음 파이프라인** (`record`): baseline·Step1에서 음성 파일 확보 → Firebase Storage 업로드
+- [x] 카메라/마이크 실제 OS 권한 요청 + 거부 UX (설정 열기/건너뛰기)
+- [x] 통화형 화면 4곳 전면 카메라 셀프 프리뷰 (`CameraSelfView`)
+- [x] 마이크 녹음 → 로컬 파일 보관 (Step1 → `diaryDraft.recordingPath` / baseline → `baselineRecordingProvider`)
+- 결정: Firebase Storage 미사용 (신규 프로젝트는 유료 요금제 요구) — 녹음 파일은 Phase 4에서 AI 서버로 직접 업로드
 
-## Phase 4 — AI 서버 & Baseline (논문 방법론의 심장)
+---
 
-- [ ] FastAPI 서버 스캐폴드 + 배포(Cloud Run 권장) — 별도 레포 or `server/` 디렉토리 (팀 결정)
-- [ ] 엔드포인트: `POST /analyze/voice`(librosa: 피치/속도/에너지), `POST /analyze/face`(MediaPipe: 랜드마크/AU 근사), `POST /baseline`(측정 결과 → 프로필 산출)
-- [ ] 앱 연동: baseline 측정 플로우(17~21)가 실제 녹음/영상 → 서버 분석 → `baseline_profile` 저장
-- [ ] 일기 Step1의 음성/표정 분석도 같은 엔드포인트 재사용, baseline과 **비교값** 산출
+## Phase 4 — AI 서버 & Baseline (논문 방법론의 심장) ← 다음
+
+### 📦 준비물 (시작 전 확보)
+| 항목 | 내용 | 상태 |
+|---|---|---|
+| **LLM 선택 + API 키** | Claude vs GPT 중 택1, 키 발급(카드 등록 필요, 소액 크레딧) — 누구 명의로 할지 | ⏳ 팀 결정 필요 |
+| **GCP 결제 계정** | Cloud Run 배포에 카드 등록 필요(무료 티어 내면 청구 없음) | ⏸ 보류 (2026-07-17) — **당분간 로컬 서버로 개발**, 배포는 결제 결정 후 |
+| 서버 코드 위치 | 같은 레포 `server/` vs 별도 레포 | ⏳ 팀 결정 필요 (권장: 같은 레포 `server/` — 온보딩 단순) |
+| Python 환경 | 담당 팀원 로컬에 Python 3.11+ (FastAPI/librosa/mediapipe 설치) | 담당자 준비 |
+
+### 작업
+- [ ] FastAPI 서버 스캐폴드 (로컬 실행 우선; 배포는 결제 결정 후 Cloud Run)
+- [ ] 엔드포인트: `POST /analyze/voice`(librosa: 피치/속도/에너지), `POST /analyze/face`(MediaPipe), `POST /baseline`(측정 → 프로필 산출)
+- [ ] 앱 연동: baseline 측정 플로우(17~21)가 실제 녹음 파일 업로드 → 분석 → `meta/baseline` 저장
+- [ ] 일기 Step1 음성/표정 분석도 같은 엔드포인트 재사용, baseline과 **비교값** 산출
+- 개발 팁: 에뮬레이터에서 로컬 서버 접근은 `http://10.0.2.2:8000` (`--dart-define=ODDO_API_BASE_URL`)
 
 ## Phase 5 — 일기 루프의 AI (핵심 사용자 가치)
 
-- [ ] **STT**: Step1 말하기 — 1차는 기기 STT(`speech_to_text`), 품질 필요 시 서버 Whisper로 교체 가능하게 경계 설계
-- [ ] **Step2 확인하기**: LLM으로 대화 원문 → 요약/감정 키워드/감정 점수 생성 (AI 서버가 LLM 호출 프록시)
-- [ ] **Step2 추가질문 챗**: LLM 대화 (일기 맥락 주입)
-- [ ] **Step4 상담봇**: LLM + 페르소나 설정을 시스템 프롬프트로 반영, 상담 로그 저장
-- [ ] **감정 리포트/행동 가이드 생성**: 상담 로그 + 분석값 + baseline 비교 → LLM 생성 → `reports/{date}` 저장
-- [ ] Step3 영상 제작: **미룸** — 당분간 서버가 영상 요약 텍스트만 생성, 현재 플레이어 UI 유지
+### 📦 준비물
+| 항목 | 내용 | 상태 |
+|---|---|---|
+| Phase 4 완료 | AI 서버 실행 + 앱에서 접근 가능한 URL | 선행 조건 |
+| LLM API 키 | Phase 4와 동일 키 재사용 | Phase 4에서 확보 |
+| STT | 1차는 기기 내장(무료, 준비물 없음) / 품질 미달 시 Whisper API(OpenAI 키 별도) | 기기 STT부터 |
+| **상담봇 프롬프트 정책** | 말투·가드레일(위험 발화 대응 등)·페르소나 반영 방식 | ⏳ 팀 논의 권장 (초안은 개발하며 작성 가능) |
 
-## Phase 6 — 심리테스트 & 페르소나 완성
+### 작업
+- [ ] **STT**: Step1 말하기 — 기기 STT(`speech_to_text`) 우선, Whisper 교체 가능하게 경계 설계
+- [ ] **Step2 확인하기**: LLM으로 원문 → 요약/감정 키워드/점수 생성 (AI 서버가 LLM 프록시)
+- [ ] **Step2 추가질문 챗** + **Step4 상담봇** (페르소나 시스템 프롬프트 반영, 로그 저장)
+- [ ] **감정 리포트/행동 가이드 생성** → `reports/{date}` 저장 (샘플 콘텐츠 대체)
+- [ ] 리포트 화면의 지표 타일·감정 추이도 실측값으로
+- [ ] Step3 영상: 계속 미룸 — 서버가 영상 요약 텍스트만 생성
 
-- [ ] Big5/MBTI/성향 **채점 로직** 구현 + 결과 저장, 이어하기 실동작
-- [ ] 페르소나 선택 → 저장 → **상담봇 시스템 프롬프트에 실제 반영** (챗봇 설정 화면에서 변경 가능)
+## Phase 6 — 심리테스트 & 페르소나 완성 (독립 — 언제든 병렬 가능)
+
+### 📦 준비물
+| 항목 | 내용 | 상태 |
+|---|---|---|
+| **실제 문항 + 채점 기준** | Big5/MBTI/성향 문항 전체와 채점표 (현재 앱엔 샘플 문항 1개씩뿐) | ⏳ **팀 상의 필요** (2026-07-17) — 자체 자료 없으면 공개 표준 문항(IPIP 등) 채택 검토 |
+
+### 작업
+- [ ] 문항 데이터 실장 + **채점 로직** 구현
+- [ ] 결과 저장(`meta/psych`) + 이어하기 실동작 (모델·저장소는 Phase 2에서 준비됨)
+- [ ] 페르소나 → 상담봇 시스템 프롬프트 실반영 (챗봇 설정 화면에서 변경 가능하게)
 
 ## Phase 7 — 부가 기능 마감
 
-- [ ] 알림: 일기 리마인더(로컬 알림 우선, FCM은 선택), 알림 목록 화면 실데이터
-- [ ] 설정 화면들 실동작 (알림 on/off, 계정 관리 등)
-- [ ] 숏폼 플레이어를 `video_player` 기반 실제 재생기로 (영상 파일이 생기는 시점에)
+### 📦 준비물
+| 항목 | 내용 | 상태 |
+|---|---|---|
+| 알림 정책 | 리마인더 시각/문구, 푸시(FCM) vs 로컬 알림 | 로컬 알림 우선이면 준비물 없음 |
 
-## Phase 8 — 최종 단계 (마지막에만)
+### 작업
+- [ ] 일기 리마인더(로컬 알림 우선), 알림 목록 실데이터
+- [ ] 설정 화면 실동작 (알림 on/off, 계정 관리)
+- [ ] 숏폼 플레이어 `video_player` 실재생 (영상 파일 생기는 시점에)
 
-- [ ] **Text-to-Video 결정/구현**: 실제 T2V API(Runway/Kling/Veo) vs 저비용 대체(이미지+자막 슬라이드쇼 mp4) — 예산 보고 결정
-  - ★ **요구사항 (2026-07-14 확정): 생성 영상에 인물(캐릭터)의 립싱크 + 대사 오디오(한국어) 포함 목표.**
-    단순 무음 영상이 아님 → 네이티브 오디오/립싱크를 지원하는 모델(예: Veo Fast/Standard)이 유리하고,
-    미지원 모델(Kling/Runway)은 별도 TTS+립싱크 2단계 파이프라인 필요. 목표 길이 최대 1분
-    (단일 생성은 8~10초 한계 → 세그먼트 이어붙이기, **구간 간 목소리·캐릭터 일관성**이 핵심 검증 항목).
-- [ ] **탄카츄 실제 에셋 교체** — `grep -rn "교체 예정" lib` 49개 지점, `TANKACHU_POSES.md` 매핑대로
-- [ ] **앱 색상/브랜딩 최종 반영** — `lib/theme/` 토큰만 바꾸면 전체 적용되는 구조임
-- [ ] prod flavor 최종 점검, 아이콘/스플래시, 스토어 등록 준비
+## Phase 8 — 최종 단계
+
+### 📦 준비물
+| 항목 | 내용 | 상태 |
+|---|---|---|
+| **T2V API** | 1순위 Veo 3.1 Fast(립싱크+한국어 대사 네이티브, 약 $9/분) — GCP 결제 필요 / 2순위 Kling+TTS 2단계 | ⏸ GCP 결제 보류와 연동 — 예산 논의 후 |
+| 남은 아트 7곳 | 홈 영상 썸네일(16:9), 일기 상세 장면(16:10), MBTI 일러스트 2종, 성향 일러스트 5종, 숏폼 프레임 | 이미지 생성해서 전달 (마스코트와 같은 방식) |
+| 앱 아이콘/스플래시 | 런처 아이콘·스플래시 아트 | 미준비 |
+| **스토어 출시 여부** | Google Play($25 1회)/App Store($99년) 계정 | ❓ 미정 (2026-07-17) — 교내 시연이면 APK 배포로 충분 |
+
+### 작업
+- [ ] **T2V 구현**: 립싱크+한국어 대사, 최대 1분(8~10초 세그먼트 이어붙이기 — **구간 간 목소리·캐릭터 일관성**이 핵심 검증). 확정 전 Veo vs Kling 샘플 A/B
+- [ ] 남은 일러스트/썸네일 7곳 실장 (`TANKACHU_POSES.md` §3)
+- [ ] 앱 아이콘/스플래시, prod flavor 최종 점검
+- [ ] (출시 결정 시) 스토어 등록 — iOS면 Apple 로그인 추가 필수
 
 ---
 
@@ -85,10 +128,10 @@
 
 | 담당 | 영역 | 주요 Phase |
 |---|---|---|
-| A | 인프라 + auth (Firebase 셋업, 로그인, 가드) | 0, 1 |
-| B | 데이터 레이어 (Firestore 스키마, repository 전환, 영구 저장) | 2 |
-| C | AI 서버 (FastAPI, 음성/표정 분석, LLM 프록시) | 4, 5 |
-| D | 디바이스/미디어 (권한, 카메라, 녹음) + 일기 플로우 연동 | 3, 5 |
-| 공통 | 심리테스트/페르소나/알림은 위 작업과 독립적이라 병렬 가능 | 6, 7 |
+| A | ~~인프라 + auth~~ ✅ 완료 | 0, 1 |
+| B | ~~데이터 레이어~~ ✅ 완료 | 2 |
+| C | AI 서버 (FastAPI, 로컬 개발부터) | 4, 5 |
+| D | ~~디바이스/미디어~~ ✅ 완료 → 일기 플로우 AI 연동 지원 | 3, 5 |
+| 공통 | 심리테스트(6)·알림/설정(7)은 독립적이라 병렬 가능 | 6, 7 |
 
-> Phase 0·1·2가 끝나야 3~5가 매끄럽습니다. 0은 한 명이 빠르게 끝내고 공유하는 것을 권장.
+> 현재 위치: **Phase 4 시작 전.** 코드 쪽 선행 조건은 모두 충족 — 남은 블로커는 준비물 표의 ⏳/⏸ 항목들(LLM 키, GCP 결제, 심리 문항).
