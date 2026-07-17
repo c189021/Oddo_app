@@ -19,6 +19,9 @@ class LocalStore {
   static const String kPersonaId = 'persona_id';
   static const String kRecordedDays = 'recorded_days'; // ISO date strings
 
+  /// 일기 리마인더 알림 on/off (Phase 7 로컬 푸시의 스위치).
+  static const String kReminderEnabled = 'reminder_enabled';
+
   bool getBool(String key, {bool fallback = false}) =>
       _prefs.getBool(key) ?? fallback;
 
