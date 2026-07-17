@@ -13,6 +13,7 @@ import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/camera_self_view.dart';
+import '../../../../widgets/elapsed_timer_text.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/tip_card.dart';
 import '../../application/baseline_recording_provider.dart';
@@ -145,7 +146,7 @@ class _PreviewCard extends StatelessWidget {
                     MascotImage(pose: MascotPose.waving, size: 150, onDark: true)),
           ),
           Positioned(top: 12, left: 12, child: _LiveChip()),
-          Positioned(top: 12, right: 12, child: _TimerChip(time: '00:28')),
+          Positioned(top: 12, right: 12, child: _TimerChip()),
           Positioned(bottom: 14, right: 14, child: _Waveform()),
         ],
       ),
@@ -185,8 +186,7 @@ class _LiveChip extends StatelessWidget {
 }
 
 class _TimerChip extends StatelessWidget {
-  const _TimerChip({required this.time});
-  final String time;
+  const _TimerChip();
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +202,9 @@ class _TimerChip extends StatelessWidget {
           const Icon(Icons.schedule_rounded,
               size: 13, color: AppColors.callTextSecondary),
           const SizedBox(width: 4),
-          Text(time,
+          // 측정 시작부터 실제 경과 시간.
+          ElapsedTimerText(
+              showHours: false,
               style: AppTypography.caption
                   .copyWith(color: AppColors.callTextPrimary)),
         ],

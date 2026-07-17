@@ -6,22 +6,21 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
 import 'camera_self_view.dart';
+import 'elapsed_timer_text.dart';
 
 /// Shared chrome for the dark video-call screens (tutorial call practice,
 /// baseline measuring, Step 1 live speaking, Step 4 counseling). Extracted so
 /// the four screens share one implementation.
 
-/// Live status row: a colored dot + label + timer, centered.
+/// Live status row: a colored dot + label + live elapsed timer, centered.
 class CallStatusRow extends StatelessWidget {
   const CallStatusRow({
     super.key,
     required this.label,
-    required this.timer,
     this.dotColor = AppColors.error,
   });
 
   final String label;
-  final String timer;
   final Color dotColor;
 
   @override
@@ -39,7 +38,8 @@ class CallStatusRow extends StatelessWidget {
             style: AppTypography.caption
                 .copyWith(color: AppColors.callTextSecondary)),
         const SizedBox(width: 10),
-        Text(timer,
+        // 화면 진입부터 실제로 흐르는 경과 시간.
+        ElapsedTimerText(
             style: AppTypography.caption
                 .copyWith(color: AppColors.callTextPrimary)),
       ],

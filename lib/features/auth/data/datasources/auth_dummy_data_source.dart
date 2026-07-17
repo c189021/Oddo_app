@@ -69,6 +69,15 @@ class AuthDummyDataSource implements AuthDataSource {
   }
 
   @override
+  Future<void> updateNickname({required String nickname}) async {
+    await _delay();
+    _current = _current?.copyWith(nickname: nickname);
+  }
+
+  @override
+  Future<bool> hasPasswordLogin() async => true;
+
+  @override
   Future<void> logout() async {
     await _delay();
     _current = null;

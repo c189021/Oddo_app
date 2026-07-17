@@ -25,6 +25,7 @@ abstract final class DummySeed {
     videoUrl: 'dummy://video/20260114',
     emotionIntensity: 72,
     emotionStability: 48,
+    writtenAt: DateTime(2026, 1, 14, 18, 42),
   );
 
   static final List<DiaryEntry> diaryEntries = [diaryJan14];

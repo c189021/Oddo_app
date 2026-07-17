@@ -4,18 +4,99 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/error/app_exception.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../features/auth/application/auth_controller.dart';
+import '../../../../features/auth/data/auth_providers.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/app_background.dart';
 import '../../../../widgets/oddo_app_bar.dart';
 import '../../../../widgets/oddo_card.dart';
+import '../../../../widgets/oddo_text_field.dart';
 
-/// Auxiliary — 마이페이지. Shows the logged-in profile (nickname/email) and
-/// account actions: 로그아웃 / 회원 탈퇴.
+/// 이 계정이 비밀번호 로그인을 지원하는지 (소셜 전용 계정이면 false —
+/// 비밀번호 변경 메뉴를 숨긴다).
+final hasPasswordLoginProvider = FutureProvider<bool>((ref) {
+  return ref.watch(authRepositoryProvider).hasPasswordLogin();
+});
+
+/// Auxiliary — 마이페이지. 프로필(닉네임 수정 가능) + 계정 작업:
+/// 비밀번호 변경(이메일 계정만) / 로그아웃 / 회원 탈퇴.
 class MyPageScreen extends ConsumerWidget {
   const MyPageScreen({super.key});
+
+  Future<void> _editNickname(BuildContext context, WidgetRef ref) async {
+    final current = ref.read(authControllerProvider).user?.nickname ?? '';
+    final controller = TextEditingController(text: current);
+    final saved = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('닉네임 수정', style: AppTypography.subtitle),
+        content: OddoTextField(
+          controller: controller,
+          hint: '닉네임을 입력해주세요',
+          prefixIcon: Icons.person_outline_rounded,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              final error = Validators.nickname(name);
+              if (error != null) {
+                ScaffoldMessenger.of(dialogContext)
+                    .showSnackBar(SnackBar(content: Text(error)));
+                return;
+              }
+              Navigator.of(dialogContext).pop(name);
+            },
+            child: const Text('저장',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    if (saved == null || saved == current) return;
+    try {
+      await ref.read(authControllerProvider.notifier).updateNickname(saved);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('닉네임을 변경했어요.')));
+    } on AppException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
+    final email = ref.read(authControllerProvider).user?.email;
+    if (email == null || email.isEmpty) return;
+    final confirmed = await _confirm(
+      context,
+      title: '비밀번호를 변경할까요?',
+      message: '$email 주소로 비밀번호 재설정 메일을 보내드려요.',
+      confirmLabel: '메일 보내기',
+    );
+    if (confirmed != true) return;
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .sendPasswordReset(email: email);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('메일을 보냈어요. 받은 편지함을 확인해주세요.')));
+    } on AppException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
 
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
     final confirmed = await _confirm(
@@ -84,6 +165,7 @@ class MyPageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider.select((s) => s.user));
+    final hasPassword = ref.watch(hasPasswordLoginProvider).value ?? false;
 
     return Scaffold(
       appBar: const OddoAppBar(title: '마이페이지'),
@@ -118,6 +200,12 @@ class MyPageScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+                    if (user != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit_rounded,
+                            size: 20, color: AppColors.textTertiary),
+                        onPressed: () => _editNickname(context, ref),
+                      ),
                   ],
                 ),
               ),
@@ -126,6 +214,14 @@ class MyPageScreen extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
+                    if (hasPassword) ...[
+                      _MenuRow(
+                        icon: Icons.lock_outline_rounded,
+                        label: '비밀번호 변경',
+                        onTap: () => _changePassword(context, ref),
+                      ),
+                      const Divider(color: AppColors.divider, height: 1),
+                    ],
                     _MenuRow(
                       icon: Icons.logout_rounded,
                       label: '로그아웃',

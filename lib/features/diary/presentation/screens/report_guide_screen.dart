@@ -58,6 +58,7 @@ class _ReportGuideScreenState extends ConsumerState<ReportGuideScreen> {
       emotionKeywords: sampleEntry.emotionKeywords,
       emotionIntensity: sampleEntry.emotionIntensity,
       emotionStability: sampleEntry.emotionStability,
+      writtenAt: now,
     );
     final report = EmotionReport(
       date: writtenDate,

@@ -204,6 +204,24 @@ class AuthFirebaseDataSource implements AuthDataSource {
   }
 
   @override
+  Future<void> updateNickname({required String nickname}) {
+    return _guard(() async {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) {
+        throw const AuthException('로그인이 필요해요. 다시 로그인해주세요.');
+      }
+      await _userDoc(uid).update({'nickname': nickname});
+    });
+  }
+
+  @override
+  Future<bool> hasPasswordLogin() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    return user.providerData.any((p) => p.providerId == 'password');
+  }
+
+  @override
   Future<void> logout() {
     return _guard(() async {
       // Also drop the social sessions so account pickers show next time.

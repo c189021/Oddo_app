@@ -72,7 +72,7 @@ class _DiaryStep1LiveScreenState extends ConsumerState<DiaryStep1LiveScreen> {
                 ),
               ],
             ),
-            const CallStatusRow(label: 'AI와 실시간 대화 중', timer: '00:02:48'),
+            const CallStatusRow(label: 'AI와 실시간 대화 중'),
             Expanded(
               child: Stack(
                 children: [
