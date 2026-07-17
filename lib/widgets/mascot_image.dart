@@ -15,6 +15,7 @@ class MascotImage extends StatelessWidget {
     required this.pose,
     this.size = 120,
     this.onDark = false,
+    this.alignment = Alignment.center,
   });
 
   final MascotPose pose;
@@ -23,9 +24,13 @@ class MascotImage extends StatelessWidget {
   /// Use a lighter placeholder when shown on a dark (video-call) background.
   final bool onDark;
 
+  /// 박스 안에서 이미지 정렬 (예: peeking 포즈는 bottomCenter로 손끝을
+  /// 박스 하단에 딱 붙인다).
+  final Alignment alignment;
+
   @override
   Widget build(BuildContext context) {
-    // 원본이 2048px라 표시 크기만큼만 디코드해 메모리를 아낀다.
+    // 원본이 크므로 표시 크기만큼만 디코드해 메모리를 아낀다.
     final cacheWidth =
         (size * MediaQuery.devicePixelRatioOf(context)).round();
     return Image.asset(
@@ -33,6 +38,7 @@ class MascotImage extends StatelessWidget {
       width: size,
       height: size,
       fit: BoxFit.contain,
+      alignment: alignment,
       cacheWidth: cacheWidth,
       errorBuilder: (_, _, _) => Image.asset(
         AppAssets.tankachuPlaceholder,

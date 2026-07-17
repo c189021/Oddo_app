@@ -122,26 +122,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        // TODO: 카드 뒤에서 얼굴·손을 내미는 정면 포즈로 교체 예정
-                        const Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: MascotImage(
-                              pose: MascotPose.front,
-                              size: 150,
-                            ),
-                          ),
-                        ),
                         Padding(
-                          padding: const EdgeInsets.only(top: 96),
+                          // 마스코트 박스(170) - 겹침(26) = 카드 시작 오프셋.
+                          padding: const EdgeInsets.only(top: 144),
                           child: _HomeCard(
                             date: selected,
                             written: written,
                             onReadDiary: () =>
                                 context.goNamed(AppRoute.recordsDiary),
                             onWrite: () => _onWritePressed(onboarded, selected),
+                          ),
+                        ),
+                        // 카드 위 레이어: 빼꼼 포즈의 양손이 카드 윗변을 잡는
+                        // 연출 (이미지 하단 = 손끝이라 카드 내용은 안 가림).
+                        const Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: MascotImage(
+                              pose: MascotPose.peeking,
+                              size: 170,
+                              alignment: Alignment.bottomCenter,
+                            ),
                           ),
                         ),
                       ],
