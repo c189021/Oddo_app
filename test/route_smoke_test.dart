@@ -18,6 +18,7 @@ const _routes = <String>[
   AppPath.signup,
   AppPath.socialExtraInfo,
   AppPath.findPassword,
+  AppPath.termsDetail,
   AppPath.home,
   AppPath.homeWritten,
   AppPath.permission,

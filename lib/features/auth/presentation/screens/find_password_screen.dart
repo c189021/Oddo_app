@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/error/app_exception.dart';
 import '../../../../core/utils/validators.dart';
@@ -140,6 +143,24 @@ class _FindPasswordScreenState extends ConsumerState<FindPasswordScreen> {
 class _HelpCard extends StatelessWidget {
   const _HelpCard();
 
+  /// 메일 앱으로 문의 — 앱이 없으면 주소를 클립보드에 복사.
+  Future<void> _contactSupport(BuildContext context) async {
+    final uri = Uri(
+      scheme: 'mailto',
+      path: AppConfig.supportEmail,
+      queryParameters: {'subject': '[Oddo] 문의'},
+    );
+    final launched = await launchUrl(uri).catchError((_) => false);
+    if (launched || !context.mounted) return;
+    await Clipboard.setData(
+        const ClipboardData(text: AppConfig.supportEmail));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('메일 앱을 열 수 없어 주소를 복사했어요: ${AppConfig.supportEmail}')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -167,7 +188,7 @@ class _HelpCard extends StatelessWidget {
               style: AppTypography.caption),
           Gap.h8,
           GestureDetector(
-            onTap: () {}, // TODO: 고객센터 문의 연결 예정
+            onTap: () => _contactSupport(context),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

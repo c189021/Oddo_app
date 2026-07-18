@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/dummy/terms_dummy.dart';
 import '../../features/auth/presentation/screens/find_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/social_extra_info_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/auth/presentation/screens/terms_detail_screen.dart';
 import '../../features/baseline/presentation/screens/baseline_analyzing_screen.dart';
 import '../../features/baseline/presentation/screens/baseline_done_screen.dart';
 import '../../features/baseline/presentation/screens/baseline_intro_screen.dart';
@@ -94,6 +96,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: AppPath.findPassword,
         name: AppRoute.findPassword,
         builder: (_, _) => const FindPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppPath.termsDetail,
+        name: AppRoute.termsDetail,
+        // extra로 TermsDoc 전달; 없으면(딥링크 등) 첫 문서 표시.
+        builder: (_, state) => TermsDetailScreen(
+          doc: state.extra is TermsDoc
+              ? state.extra as TermsDoc
+              : TermsDummy.docs.first,
+        ),
       ),
 
       // ── Home ──────────────────────────────────────────────────────────

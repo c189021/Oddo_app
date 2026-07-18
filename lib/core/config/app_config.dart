@@ -21,6 +21,9 @@ class AppConfig {
   /// flavors). Must match the scheme registered in AndroidManifest/Info.plist.
   static const String kakaoNativeAppKey = '8b00254b04d1af4e710681a3184a48f9';
 
+  /// 고객센터 수신 주소 — 팀 공용 메일이 생기면 여기만 교체.
+  static const String supportEmail = 'sjjw1111@naver.com';
+
   final AppEnvironment environment;
   final String appName;
   final String apiBaseUrl;

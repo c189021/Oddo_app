@@ -12,6 +12,7 @@ const _publicPaths = {
   AppPath.signup,
   AppPath.socialExtraInfo,
   AppPath.findPassword,
+  AppPath.termsDetail, // 가입 중(비로그인) 약관 보기
 };
 
 /// Central navigation guard (go_router `redirect`).

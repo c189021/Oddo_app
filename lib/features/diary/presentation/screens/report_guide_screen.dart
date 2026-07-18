@@ -15,6 +15,7 @@ import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/app_background.dart';
 import '../../../../widgets/card_section_header.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/oddo_card.dart';
 import '../../../../widgets/primary_button.dart';
@@ -120,7 +121,15 @@ class _ReportGuideScreenState extends ConsumerState<ReportGuideScreen> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.help_outline_rounded, size: 20),
-                    onPressed: () {},
+                    onPressed: () => showHelpSheet(
+                      context,
+                      title: '감정 리포트 도움말',
+                      items: const [
+                        '상담 내용을 바탕으로 만든 오늘의 감정 분석이에요.',
+                        '행동 가이드 탭에서 실천할 수 있는 제안을 볼 수 있어요.',
+                        '기록 완료하기를 누르면 이 날짜에 저장돼요.',
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/step_progress_bar.dart';
 
 /// Top bar for the baseline flow: leading (back/close) + centered title + help
@@ -50,7 +51,16 @@ class BaselineHeader extends StatelessWidget {
             ),
             IconButton(
               icon: Icon(Icons.help_outline_rounded, size: 20, color: fg),
-              onPressed: () {}, // TODO: open help later.
+              onPressed: () => showHelpSheet(
+                context,
+                title: '베이스라인 측정 도움말',
+                items: const [
+                  '평소 표정과 목소리를 기준값으로 저장하는 단계예요.',
+                  '밝은 곳에서 얼굴이 화면 중앙에 오게 해주세요.',
+                  '조용한 환경에서 평소처럼 편하게 말하면 돼요.',
+                  '측정값은 감정 분석의 비교 기준으로만 사용돼요.',
+                ],
+              ),
             ),
           ],
         ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../data/dummy/auth_dummy.dart';
+import '../../../../data/dummy/terms_dummy.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 
@@ -78,7 +81,10 @@ class _TermsAgreementSectionState extends State<TermsAgreementSection> {
             item: widget.terms[i],
             checked: _checked[i],
             onToggle: () => _toggleOne(i),
-            onView: () {}, // TODO: open the terms detail page later.
+            onView: () => context.pushNamed(
+              AppRoute.termsDetail,
+              extra: TermsDummy.byTitle(widget.terms[i].title),
+            ),
           ),
       ],
     );

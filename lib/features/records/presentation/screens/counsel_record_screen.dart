@@ -31,16 +31,9 @@ class CounselRecordScreen extends ConsumerWidget {
       bottom: false,
       child: Column(
         children: [
-          RecordTopBar(
-            title: '상담 기록',
-            trailing: [
-              IconButton(
-                icon: const Icon(Icons.tune_rounded,
-                    color: AppColors.textSecondary),
-                onPressed: () {},
-              ),
-            ],
-          ),
+          // 필터 아이콘 제거: 날짜당 세션이 1개라 필터 대상이 없음
+          // (다중 세션이 생기면 복원).
+          const RecordTopBar(title: '상담 기록'),
           Expanded(
             child: RecordAsyncView(
               value: counselAsync,

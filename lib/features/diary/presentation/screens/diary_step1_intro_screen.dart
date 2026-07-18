@@ -8,6 +8,7 @@ import '../../../../theme/app_radius.dart';
 import '../../../../theme/app_spacing.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../../widgets/app_background.dart';
+import '../../../../widgets/help_sheet.dart';
 import '../../../../widgets/mascot_image.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../../../widgets/security_note.dart';
@@ -42,7 +43,15 @@ class DiaryStep1IntroScreen extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.help_outline_rounded, size: 20),
-                    onPressed: () {},
+                    onPressed: () => showHelpSheet(
+                      context,
+                      title: '일기 작성 도움말',
+                      items: const [
+                        '말하기 → 확인하기 → 영상 제작 → 상담하기 4단계로 진행돼요.',
+                        '말하기는 영상통화처럼 편하게 이야기하면 돼요.',
+                        '완료하면 이 날짜의 일기·리포트·상담 기록이 저장돼요.',
+                      ],
+                    ),
                   ),
                 ],
               ),
