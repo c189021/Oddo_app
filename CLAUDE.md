@@ -37,31 +37,35 @@
 
 ---
 
-## 2. 현재 상태 (★ 매우 중요 — 어디까지 됐는지)
+## 2. 현재 상태 (★ 매우 중요 — 어디까지 됐는지, 2026-07-18 기준)
 
-**Phase-1(클릭 프로토타입) 완료 상태**입니다.
+**Phase-1(프로토타입)을 지나 실서비스 전환(Phase 0~3) 완료 상태**입니다. 상세 진행 현황·다음 단계는 **`ROADMAP.md`가 단일 기준**.
 
-- ✅ **50개 번호 화면 + 보조 화면(설정/마이페이지/챗봇설정/알림/숏폼플레이어)** 전부 구현 (`lib`에 `*_screen.dart` 52개)
-- ✅ **네비게이션 51개 라우트** 전부 연결 (go_router)
-- ✅ **더미 데이터**로 화면이 채워져 있고, 데이터 레이어가 추상화되어 있음
-- ✅ 검증 통과: `flutter analyze` clean / `flutter test` 52개 통과 / `flutter build apk --debug` 성공
+- ✅ 화면 53개 + 라우트 52개 전부 구현 (go_router, 스모크 테스트가 전 라우트 빌드 검증)
+- ✅ **실제 인증**: Firebase Auth 이메일·Google·Kakao(OIDC) 로그인/가입/자동 로그인/탈퇴, 라우터 가드 동작 (`AppConfig.dev.useDummyData=false` — dev도 실데이터)
+- ✅ **실제 데이터**: 일기/리포트/상담록이 Firestore(`FIRESTORE_SCHEMA.md`)에 날짜별 저장·조회, 작성일 집합·온보딩·페르소나 **영구 저장** (재시작 유지)
+- ✅ **디바이스**: 카메라/마이크 실권한 요청, 통화형 화면 카메라 프리뷰, 마이크 녹음(파일 로컬 보관 — Phase 4에서 AI 서버 업로드)
+- ✅ 보라 테마(#7C5CF6) + 탄카츄 실제 포즈 아트 17종 실장
+- ✅ 설정/알림/마이페이지 실화면, 도움말·약관 등 죽은 버튼 없음
+- ✅ 검증 통과 유지: `flutter analyze` clean / `flutter test` 53개 / debug APK 빌드
 
-**아직 안 된 것 (= Phase-2에서 채울 것, §12 백로그):**
+**아직 안 된 것 (= Phase 4~8, `ROADMAP.md` 참고):**
 
-- 입력 검증, 실제 인증/네트워크 호출, OS 권한 요청
-- STT / Text-to-Video / SFT 상담봇 / baseline 측정 등 실제 AI·API
-- 영구 저장(persistence) — **현재 모든 런타임 상태는 메모리 전용이라 앱 재시작 시 초기화됨**
-- 화면이 repository/provider가 아니라 `*Dummy`를 직접 읽는 부분이 많음 (전환 필요)
+- **AI 콘텐츠 생성** — STT, 요약/키워드/점수, 상담봇 대화, 리포트 문구, baseline 분석은 아직 **샘플 콘텐츠로 저장**됨 (구조·저장은 실제). Phase 4(FastAPI 서버)~5에서 실생성으로 교체
+- 심리테스트 실제 문항/채점 (Phase 6 — 문항 자료 팀 논의 중)
+- 숏폼 실제 영상(T2V, 립싱크+한국어 대사 요구), 일러스트 7곳, 앱 아이콘, 정식 약관 (Phase 8)
 
-> 한 줄 요약: **"화면과 이동은 다 된다. 데이터/로직/저장은 더미이거나 비어 있다."**
+> 한 줄 요약: **"로그인부터 기록·저장까지 진짜로 돌아간다. AI가 채울 '내용물'만 샘플이다."**
 
 ---
 
 ## 3. 기술 스택 & 실행
 
 - **Flutter 3.41.9 / Dart 3.11.5** (정확한 버전은 `flutter --version`으로 확인)
-- 의존성(`pubspec.yaml`): `flutter_riverpod ^3.3.1`, `go_router ^17.3.0`, `intl ^0.20.2`, `cupertino_icons`
-- 진입점: `lib/main.dart` → `bootstrap(AppConfig.dev)` (dev flavor, 더미 데이터)
+- 주요 의존성(`pubspec.yaml`이 기준): `flutter_riverpod`, `go_router`, `firebase_core/auth/cloud_firestore`, `google_sign_in`, `kakao_flutter_sdk_user`, `camera`, `record`, `permission_handler`, `speech_to_text`, `dio`, `shared_preferences`, `video_player`, `url_launcher`, `package_info_plus` 등
+- 진입점: `lib/main.dart` → `bootstrap(AppConfig.dev)` — **dev도 실제 Firebase 사용** (`useDummyData=false`; 더미는 테스트 전용). prod는 `main_prod.dart` + `--dart-define=ODDO_API_BASE_URL`
+- 백엔드: Firebase 프로젝트 `oddo-emotion-diary` (Auth + Firestore, 보안 규칙은 레포의 `firestore.rules`)
+- ⚠️ 팀원이 자기 기기에서 **구글/카카오 로그인 테스트**하려면 본인 디버그 키 지문 등록 필요(팀장에게 SHA-1·키 해시 전달 — PR #5/#6 본문에 추출 명령). 이메일 로그인은 등록 없이 동작
 
 ```bash
 flutter pub get        # pull 후 최초 1회
@@ -141,7 +145,7 @@ lib/
 |---|---|---|
 | `viewingDateProvider` | `features/records/application/viewing_date_provider.dart` | **현재 포커스된 일기 날짜**(date-only). 홈 주간바 선택, 기록 화면들이 공유. 일기 작성 시작 모달에서 작성 대상 날짜로 set되어 작성 플로우 전체가 그 날짜를 타겟함. 기본값=오늘. |
 | `onboardingCompleteProvider` | `features/onboarding/application/onboarding_controller.dart` | 온보딩 완료 여부(bool). 홈 진입 팝업이 baseline-필요 vs 일기-시작 모달로 분기되는 근거. `markComplete()`. |
-| `recordedDaysProvider` | `features/records/application/recorded_days_provider.dart` | **작성된 날짜 집합**(`Set<DateTime>`, date-only). `CalendarDummy.recordedDays`로 시드, 일기 완료 시 `markRecorded()`로 추가. 홈·주간바·월간 캘린더가 watch → 작성 즉시 반영. **메모리 전용(재시작 초기화).** |
+| `recordedDaysProvider` | `features/records/application/recorded_days_provider.dart` | **작성된 날짜 집합**(`Set<DateTime>`, date-only). **로그인 세션 기준 Firestore(diaries 문서 id)에서 로드 — 재시작해도 유지.** 일기 완료 시 `markRecorded()`로 즉시 반영. 더미 모드(테스트)에서만 `CalendarDummy` 시드. |
 
 흐름 예: 안 쓴 날 선택 → `showDiaryStartModal(context, ref, date:)`가 `viewingDate=그날`로 set → 작성 플로우 → `report_guide_screen`의 "기록 완료하기"가 `recordedDaysProvider.markRecorded(viewingDate)` 후 `goNamed(homeWritten)` → 홈·달력에 그날이 "작성됨"으로 표시.
 
@@ -160,10 +164,10 @@ lib/
 
 ## 8. 마스코트 / 에셋 규칙
 
-- 마스코트는 지금 **단일 플레이스홀더** `assets/characters/tankachu_placeholder.png` 하나를 `MascotImage(pose: MascotPose.xxx)`로 모든 곳에서 재사용.
-- 화면마다 의도한 실제 포즈는 코드에 **`// TODO ...포즈로 교체 예정`** 주석으로 표시. 실제 에셋이 준비되면 이 지점들을 교체.
-- 전체 교체 지점 목록/매핑은 **`TANKACHU_POSES.md`**. 현재 `// TODO …교체 예정` 약 49개(마스코트 ~42 + 썸네일/프레임/일러스트 7).
-  - 현재 목록 다시 뽑기: `grep -rn "교체 예정" lib`
+- **실제 포즈 아트 17종 실장 완료** (16 기본 포즈 + 홈 전용 `peeking`) — `assets/images/character/<pose>.png`, `MascotImage(pose:)`가 자동 매핑 (없는 포즈는 플레이스홀더 폴백).
+- 새 마스코트 자리가 필요하면 `MascotPose` enum의 기존 포즈를 재사용. 새 포즈 추가 시 같은 규격(투명 PNG, 캐릭터가 캔버스 86% 차지)으로 `assets/images/character/`에 추가.
+- 남은 미실장 이미지는 **마스코트 외 일러스트/썸네일 7곳** — 목록은 `TANKACHU_POSES.md` §3.
+- 코드의 `// TODO …교체 예정` 주석은 장면 맞춤 아트로 다듬을 수 있는 지점 표시 (`grep -rn "교체 예정" lib`).
 
 ---
 
