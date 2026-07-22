@@ -254,7 +254,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-/// Kakao brand badge: yellow rounded square with a chat bubble.
+/// Kakao brand badge: yellow rounded square with the official KakaoTalk symbol.
 class _KakaoBadge extends StatelessWidget {
   const _KakaoBadge();
 
@@ -263,17 +263,22 @@ class _KakaoBadge extends StatelessWidget {
     return Container(
       width: 28,
       height: 28,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.kakao,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Icon(Icons.chat_bubble_rounded,
-          size: 15, color: Color(0xFF3A1D1D)),
+      child: Image.asset(
+        AppAssets.kakaoSymbol,
+        width: 16,
+        height: 16,
+        filterQuality: FilterQuality.medium,
+      ),
     );
   }
 }
 
-/// Google brand badge: white circle with a colored "G".
+/// Google brand badge: white circle with the official 4-color "G".
 class _GoogleBadge extends StatelessWidget {
   const _GoogleBadge();
 
@@ -288,13 +293,11 @@ class _GoogleBadge extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.border),
       ),
-      child: const Text(
-        'G',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w900,
-          color: Color(0xFF4285F4),
-        ),
+      child: Image.asset(
+        AppAssets.googleLogo,
+        width: 17,
+        height: 17,
+        filterQuality: FilterQuality.medium,
       ),
     );
   }

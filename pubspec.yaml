@@ -82,6 +82,7 @@ flutter:
   assets:
     - assets/characters/
     - assets/images/
+    - assets/images/brand/
     - assets/images/character/
     - assets/icons/
 
