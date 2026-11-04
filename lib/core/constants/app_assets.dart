@@ -30,9 +30,14 @@ abstract final class AppAssets {
 
   static const String _imageBase = 'assets/images';
   static const String _characterBase = '$_imageBase/character';
+  static const String _brandBase = '$_imageBase/brand';
   static const String _iconBase = 'assets/icons';
 
   static const String logo = '$_imageBase/oddo_logo.png';
+
+  /// Official third-party brand marks for social-login buttons.
+  static const String googleLogo = '$_brandBase/google_g.png';
+  static const String kakaoSymbol = '$_brandBase/kakao_symbol.png';
 
   /// Single unified mascot placeholder used everywhere for now. Per-pose
   /// images ([mascot]) will replace it in one pass once art is ready.
